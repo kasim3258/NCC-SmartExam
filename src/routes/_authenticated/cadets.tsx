@@ -80,8 +80,27 @@ function CadetsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [editing, setEditing] = useState<{
+    userId: string;
+    name: string;
+    cadetCategory: "NCC B" | "NCC C" | null;
+    examParticipant: boolean;
+    examRequired: boolean;
+  } | null>(null);
+
+  const saveMember = useMutation({
+    mutationFn: (v: NonNullable<typeof editing>) => updateMember({ data: v }),
+    onSuccess: () => {
+      toast.success("Member details updated.");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["members"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!isAdmin)
     return <p className="text-muted-foreground">You do not have access to this page.</p>;
+
 
   const stats = new Map<string, { attempts: number; avg: number }>();
   for (const a of perf.data ?? []) {
