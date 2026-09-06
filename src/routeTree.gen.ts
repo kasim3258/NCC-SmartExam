@@ -17,6 +17,7 @@ import { Route as AuthenticatedMyExamsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
 import { Route as AuthenticatedExamsIndexRouteImport } from './routes/_authenticated/exams.index'
+import { Route as AuthenticatedExamsExamIdRouteImport } from './routes/_authenticated/exams.$examId'
 import { Route as AuthenticatedResultsIndexRouteImport } from './routes/_authenticated/results.index'
 import { Route as AuthenticatedResultsAttemptIdRouteImport } from './routes/_authenticated/results.$attemptId'
 
@@ -60,6 +61,12 @@ const AuthenticatedExamsIndexRoute = AuthenticatedExamsIndexRouteImport.update({
   path: '/exams/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedExamsExamIdRoute =
+  AuthenticatedExamsExamIdRouteImport.update({
+    id: '/exams/$examId',
+    path: '/exams/$examId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedResultsIndexRoute =
   AuthenticatedResultsIndexRouteImport.update({
     id: '/results/',
@@ -80,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
+  '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
   '/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
   '/exams/': typeof AuthenticatedExamsIndexRoute
   '/results/': typeof AuthenticatedResultsIndexRoute
@@ -91,6 +99,7 @@ export interface FileRoutesByTo {
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
+  '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
   '/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
   '/exams': typeof AuthenticatedExamsIndexRoute
   '/results': typeof AuthenticatedResultsIndexRoute
@@ -104,6 +113,7 @@ export interface FileRoutesById {
   '/_authenticated/my-exams': typeof AuthenticatedMyExamsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
+  '/_authenticated/exams/$examId': typeof AuthenticatedExamsExamIdRoute
   '/_authenticated/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
   '/_authenticated/exams/': typeof AuthenticatedExamsIndexRoute
   '/_authenticated/results/': typeof AuthenticatedResultsIndexRoute
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/my-exams'
     | '/notifications'
     | '/exam/$examId'
+    | '/exams/$examId'
     | '/results/$attemptId'
     | '/exams/'
     | '/results/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/my-exams'
     | '/notifications'
     | '/exam/$examId'
+    | '/exams/$examId'
     | '/results/$attemptId'
     | '/exams'
     | '/results'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-exams'
     | '/_authenticated/notifications'
     | '/_authenticated/exam/$examId'
+    | '/_authenticated/exams/$examId'
     | '/_authenticated/results/$attemptId'
     | '/_authenticated/exams/'
     | '/_authenticated/results/'
@@ -209,6 +222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExamsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/exams/$examId': {
+      id: '/_authenticated/exams/$examId'
+      path: '/exams/$examId'
+      fullPath: '/exams/$examId'
+      preLoaderRoute: typeof AuthenticatedExamsExamIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/results/': {
       id: '/_authenticated/results/'
       path: '/results'
@@ -231,6 +251,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyExamsRoute: typeof AuthenticatedMyExamsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedExamExamIdRoute: typeof AuthenticatedExamExamIdRoute
+  AuthenticatedExamsExamIdRoute: typeof AuthenticatedExamsExamIdRoute
   AuthenticatedResultsAttemptIdRoute: typeof AuthenticatedResultsAttemptIdRoute
   AuthenticatedExamsIndexRoute: typeof AuthenticatedExamsIndexRoute
   AuthenticatedResultsIndexRoute: typeof AuthenticatedResultsIndexRoute
@@ -241,6 +262,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyExamsRoute: AuthenticatedMyExamsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedExamExamIdRoute: AuthenticatedExamExamIdRoute,
+  AuthenticatedExamsExamIdRoute: AuthenticatedExamsExamIdRoute,
   AuthenticatedResultsAttemptIdRoute: AuthenticatedResultsAttemptIdRoute,
   AuthenticatedExamsIndexRoute: AuthenticatedExamsIndexRoute,
   AuthenticatedResultsIndexRoute: AuthenticatedResultsIndexRoute,
