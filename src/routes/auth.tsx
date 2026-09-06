@@ -244,7 +244,39 @@ function AuthPage() {
                   </Button>
                 </form>
               </TabsContent>
+
+              <TabsContent value="admin">
+                <form onSubmit={signInAdmin} className="space-y-4 pt-4">
+                  <p className="text-xs text-muted-foreground">
+                    For Main Admins and Admins only.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="ad-email">Admin email</Label>
+                    <Input
+                      id="ad-email"
+                      type="email"
+                      required
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ad-pass">Password</Label>
+                    <Input
+                      id="ad-pass"
+                      type="password"
+                      required
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Signing in…" : "Admin sign in"}
+                  </Button>
+                </form>
+              </TabsContent>
             </Tabs>
+
           </CardContent>
         </Card>
       </div>
