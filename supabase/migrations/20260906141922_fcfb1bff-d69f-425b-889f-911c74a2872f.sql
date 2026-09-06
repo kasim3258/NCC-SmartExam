@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "cadet reads questions of own attempts" ON public.questions;
