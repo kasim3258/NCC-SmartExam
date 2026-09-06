@@ -118,8 +118,14 @@ function PdfImport() {
   }
 
   async function run() {
-    if (!examId) return toast.error("Choose the exam these questions belong to.");
-    if (!file) return toast.error("Choose a PDF file first.");
+    if (!examId) {
+      toast.error("Choose the exam these questions belong to.");
+      return;
+    }
+    if (!file) {
+      toast.error("Choose a PDF file first.");
+      return;
+    }
 
     setRunning(true);
     setLog([]);
@@ -143,8 +149,10 @@ function PdfImport() {
       const sections = new Map<string, string>();
       let existingFound = 0;
       for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        say(`Analysing pages ${chunk[0].page}–${chunk[chunk.length - 1].page}…`);
+        const chunk = chunks[i]!;
+        const first = chunk[0]!.page;
+        const last = chunk[chunk.length - 1]!.page;
+        say(`Analysing pages ${first}–${last}…`);
         try {
           const res = await analyze({ data: { pdfId, examId, pages: chunk } });
           res.sections.forEach((s) => sections.set(s.id, s.name));
@@ -154,7 +162,7 @@ function PdfImport() {
             "ok",
           );
         } catch (e: any) {
-          say(`Pages ${chunk[0].page}–${chunk[chunk.length - 1].page}: ${e.message}`, "error");
+          say(`Pages ${first}–${last}: ${e.message}`, "error");
         }
         setProgress(25 + Math.round(((i + 1) / chunks.length) * 45));
       }
@@ -163,7 +171,7 @@ function PdfImport() {
       const list = [...sections.entries()];
       let generated = 0;
       for (let i = 0; i < list.length; i++) {
-        const [sectionId, name] = list[i];
+        const [sectionId, name] = list[i]!;
         say(`Writing ${count} questions for “${name}”…`);
         try {
           const res = await generate({ data: { examId, sectionId, count } });

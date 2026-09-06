@@ -68,7 +68,7 @@ function Practice() {
   async function choose(letter: "A" | "B" | "C" | "D") {
     if (!sessionId || feedback) return;
     try {
-      const res = await answer({ data: { sessionId, order: questions[index].order, selected: letter } });
+      const res = await answer({ data: { sessionId, order: questions[index]!.order, selected: letter } });
       setFeedback(res);
       if (res.isCorrect) setCorrect((c) => c + 1);
     } catch (e: any) {
