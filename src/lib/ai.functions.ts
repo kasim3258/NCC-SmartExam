@@ -267,7 +267,6 @@ Only include existing_questions that are literally printed in the material (alre
       inserted += 1;
     }
 
-    await supabaseAdmin.rpc as unknown;
     const { data: doc } = await supabaseAdmin
       .from("pdf_documents")
       .select("processed_pages")
