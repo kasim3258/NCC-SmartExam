@@ -44,12 +44,52 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"NCC B" | "NCC C">("NCC B");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) router.navigate({ to: "/dashboard" });
     });
   }, [router]);
+
+  const signInWithGoogle = async () => {
+    setLoading(true);
+    const { lovable } = await import("@/integrations/lovable");
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      setLoading(false);
+      toast.error("Google sign-in failed. Please try again.");
+      return;
+    }
+    if (result.redirected) return;
+    setLoading(false);
+    router.navigate({ to: "/dashboard" });
+  };
+
+  const signInAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: adminEmail,
+      password: adminPassword,
+    });
+    if (error || !data.user) {
+      setLoading(false);
+      toast.error(error?.message ?? "Sign in failed.");
+      return;
+    }
+    const { data: staff } = await supabase.rpc("is_staff", { _user_id: data.user.id });
+    setLoading(false);
+    if (!staff) {
+      await supabase.auth.signOut();
+      toast.error("This account does not have administrator access.");
+      return;
+    }
+    router.navigate({ to: "/dashboard" });
+  };
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +102,7 @@ function AuthPage() {
     }
     router.navigate({ to: "/dashboard" });
   };
+
 
   const signUp = async (e: React.FormEvent) => {
     e.preventDefault();
