@@ -145,11 +145,27 @@ function AuthPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={loading}
+              onClick={signInWithGoogle}
+            >
+              <Mail className="mr-2 h-4 w-4" /> Continue with Google
+            </Button>
+            <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              or use email
+              <span className="h-px flex-1 bg-border" />
+            </div>
             <Tabs defaultValue="signin">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
                 <TabsTrigger value="signup">Register</TabsTrigger>
+                <TabsTrigger value="admin">Admin</TabsTrigger>
               </TabsList>
+
 
               <TabsContent value="signin">
                 <form onSubmit={signIn} className="space-y-4 pt-4">
