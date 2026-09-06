@@ -36,7 +36,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 }
 
 function Dashboard() {
-  const { isAdmin, isMainAdmin, profile, user } = useAuth();
+  const { isAdmin, isCadet, isMainAdmin, profile, user } = useAuth();
 
   const staffStats = useQuery({
     queryKey: ["staff-stats"],
@@ -65,7 +65,7 @@ function Dashboard() {
 
   const cadetData = useQuery({
     queryKey: ["cadet-dashboard", user?.id],
-    enabled: !isAdmin && !!user,
+    enabled: isCadet && !!user,
     queryFn: async () => {
       const [assignments, attempts] = await Promise.all([
         supabase

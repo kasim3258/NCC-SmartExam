@@ -140,7 +140,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-t border-sidebar-border p-4 text-sm">
           <p className="truncate font-medium">{profile?.name || profile?.email || "Member"}</p>
           <p className="text-xs text-sidebar-foreground/70">
-            {loading ? "…" : roles.join(", ") || "CADET"}
+            {roles.join(", ")}
           </p>
           <Button
             variant="ghost"
