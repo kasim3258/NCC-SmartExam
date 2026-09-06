@@ -28,6 +28,7 @@ export type Database = {
           option_c: string
           option_d: string
           question: string
+          question_order: number
           selected_answer: string | null
           session_id: string
           topic: string | null
@@ -45,6 +46,7 @@ export type Database = {
           option_c: string
           option_d: string
           question: string
+          question_order?: number
           selected_answer?: string | null
           session_id: string
           topic?: string | null
@@ -62,6 +64,7 @@ export type Database = {
           option_c?: string
           option_d?: string
           question?: string
+          question_order?: number
           selected_answer?: string | null
           session_id?: string
           topic?: string | null
@@ -85,6 +88,7 @@ export type Database = {
           id: string
           score: number
           status: Database["public"]["Enums"]["practice_status"]
+          topic: string | null
           total_questions: number
           unanswered: number
           user_id: string
@@ -98,6 +102,7 @@ export type Database = {
           id?: string
           score?: number
           status?: Database["public"]["Enums"]["practice_status"]
+          topic?: string | null
           total_questions?: number
           unanswered?: number
           user_id: string
@@ -111,6 +116,7 @@ export type Database = {
           id?: string
           score?: number
           status?: Database["public"]["Enums"]["practice_status"]
+          topic?: string | null
           total_questions?: number
           unanswered?: number
           user_id?: string
