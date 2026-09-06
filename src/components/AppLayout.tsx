@@ -43,8 +43,11 @@ const adminNav: NavItem[] = [
   { to: "/notifications", label: "Notifications", icon: Bell },
 ];
 
+const staffOnlyPrefixes = ["/exams", "/question-bank", "/pdf-import", "/ai-review", "/cadets", "/geo-activity"];
+const cadetOnlyPrefixes = ["/my-exams", "/exam", "/results", "/practice", "/analysis"];
+
 export function AppLayout({ children }: { children: ReactNode }) {
-  const { isAdmin, profile, roles, loading, user } = useAuth();
+  const { isAdmin, isCadet, profile, roles, loading, error, roleResolved, user } = useAuth();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -59,7 +62,54 @@ export function AppLayout({ children }: { children: ReactNode }) {
     router.navigate({ to: "/auth" });
   };
 
+  if (loading || (!roleResolved && !error)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6 text-center">
+        <div>
+          <p className="text-sm font-medium">Checking your account role…</p>
+          <p className="mt-1 text-sm text-muted-foreground">One moment please.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !roleResolved) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className="max-w-md rounded-lg border bg-card p-6 text-center">
+          <p className="font-semibold">Unable to determine your account role</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {error ?? "No application role has been assigned to your account."}
+          </p>
+          <Button variant="outline" className="mt-4" onClick={signOut}>
+            <LogOut className="mr-2 h-4 w-4" /> Sign out
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const matches = (list: string[]) =>
+    list.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  if ((!isAdmin && matches(staffOnlyPrefixes)) || (!isCadet && matches(cadetOnlyPrefixes))) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className="max-w-md rounded-lg border bg-card p-6 text-center">
+          <p className="font-semibold">Access denied</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This page is not available for your role ({roles.join(", ")}).
+          </p>
+          <Button className="mt-4" onClick={() => router.navigate({ to: "/dashboard" })}>
+            Go to my dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
+
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <div className="border-b border-sidebar-border px-6 py-5">
@@ -90,7 +140,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="border-t border-sidebar-border p-4 text-sm">
           <p className="truncate font-medium">{profile?.name || profile?.email || "Member"}</p>
           <p className="text-xs text-sidebar-foreground/70">
-            {loading ? "…" : roles.join(", ") || "CADET"}
+            {roles.join(", ")}
           </p>
           <Button
             variant="ghost"

@@ -54,19 +54,46 @@ function AuthPage() {
   }, [router]);
 
   const signInWithGoogle = async () => {
+    if (loading) return;
     setLoading(true);
-    const { lovable } = await import("@/integrations/lovable");
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
+    try {
+      const { lovable } = await import("@/integrations/lovable");
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        // eslint-disable-next-line no-console
+        console.error("[auth] Google sign-in failed", result.error);
+        const raw = (result.error.message ?? "").toLowerCase();
+        let message = "Unable to complete Google authentication. Please try again.";
+        if (raw.includes("unsupported provider") || raw.includes("not enabled") || raw.includes("provider")) {
+          message = "Google sign-in is not configured for this application yet.";
+        } else if (raw.includes("cancel") || raw.includes("closed") || raw.includes("denied")) {
+          message = "Google sign-in was cancelled.";
+        } else if (raw.includes("network") || raw.includes("fetch")) {
+          message = "Network problem while contacting Google. Check your connection and try again.";
+        } else if (raw.includes("redirect")) {
+          message = "Google returned to an unexpected address. Please try again from the app URL.";
+        }
+        setLoading(false);
+        toast.error(message);
+        return;
+      }
+      if (result.redirected) return;
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        setLoading(false);
+        toast.error("Your account could not be loaded after Google sign-in.");
+        return;
+      }
       setLoading(false);
-      toast.error("Google sign-in failed. Please try again.");
-      return;
+      router.navigate({ to: "/dashboard" });
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("[auth] Google sign-in threw", e);
+      setLoading(false);
+      toast.error("Unable to start Google authentication. Please try again.");
     }
-    if (result.redirected) return;
-    setLoading(false);
-    router.navigate({ to: "/dashboard" });
   };
 
   const signInAdmin = async (e: React.FormEvent) => {
@@ -78,7 +105,11 @@ function AuthPage() {
     });
     if (error || !data.user) {
       setLoading(false);
-      toast.error(error?.message ?? "Sign in failed.");
+      toast.error(
+        error?.message?.toLowerCase().includes("invalid login")
+          ? "Incorrect email or password."
+          : (error?.message ?? "Sign in failed."),
+      );
       return;
     }
     const { data: staff } = await supabase.rpc("is_staff", { _user_id: data.user.id });
@@ -93,11 +124,16 @@ function AuthPage() {
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(
+        error.message.toLowerCase().includes("invalid login")
+          ? "Incorrect email or password."
+          : error.message,
+      );
       return;
     }
     router.navigate({ to: "/dashboard" });
