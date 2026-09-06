@@ -8,7 +8,6 @@ import {
   MapPin,
   Bell,
   Users,
-  Brain,
   FileText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
