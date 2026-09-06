@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAiReviewRouteImport } from './routes/_authenticated/ai-review'
+import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
 import { Route as AuthenticatedCadetsRouteImport } from './routes/_authenticated/cadets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedGeoActivityRouteImport } from './routes/_authenticated/geo-activity'
@@ -44,6 +45,11 @@ const AuthRoute = AuthRouteImport.update({
 const AuthenticatedAiReviewRoute = AuthenticatedAiReviewRouteImport.update({
   id: '/ai-review',
   path: '/ai-review',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAnalysisRoute = AuthenticatedAnalysisRouteImport.update({
+  id: '/analysis',
+  path: '/analysis',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCadetsRoute = AuthenticatedCadetsRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ai-review': typeof AuthenticatedAiReviewRoute
+  '/analysis': typeof AuthenticatedAnalysisRoute
   '/cadets': typeof AuthenticatedCadetsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/geo-activity': typeof AuthenticatedGeoActivityRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ai-review': typeof AuthenticatedAiReviewRoute
+  '/analysis': typeof AuthenticatedAnalysisRoute
   '/cadets': typeof AuthenticatedCadetsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/geo-activity': typeof AuthenticatedGeoActivityRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/ai-review': typeof AuthenticatedAiReviewRoute
+  '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
   '/_authenticated/cadets': typeof AuthenticatedCadetsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/geo-activity': typeof AuthenticatedGeoActivityRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ai-review'
+    | '/analysis'
     | '/cadets'
     | '/dashboard'
     | '/geo-activity'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ai-review'
+    | '/analysis'
     | '/cadets'
     | '/dashboard'
     | '/geo-activity'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/ai-review'
+    | '/_authenticated/analysis'
     | '/_authenticated/cadets'
     | '/_authenticated/dashboard'
     | '/_authenticated/geo-activity'
@@ -266,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/ai-review'
       fullPath: '/ai-review'
       preLoaderRoute: typeof AuthenticatedAiReviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/analysis': {
+      id: '/_authenticated/analysis'
+      path: '/analysis'
+      fullPath: '/analysis'
+      preLoaderRoute: typeof AuthenticatedAnalysisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadets': {
@@ -364,6 +383,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReviewRoute: typeof AuthenticatedAiReviewRoute
+  AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
   AuthenticatedCadetsRoute: typeof AuthenticatedCadetsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGeoActivityRoute: typeof AuthenticatedGeoActivityRoute
@@ -381,6 +401,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReviewRoute: AuthenticatedAiReviewRoute,
+  AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
   AuthenticatedCadetsRoute: AuthenticatedCadetsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGeoActivityRoute: AuthenticatedGeoActivityRoute,
