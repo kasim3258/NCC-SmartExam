@@ -16,6 +16,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMyExamsRouteImport } from './routes/_authenticated/my-exams'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
+import { Route as AuthenticatedExamsIndexRouteImport } from './routes/_authenticated/exams.index'
 import { Route as AuthenticatedResultsIndexRouteImport } from './routes/_authenticated/results.index'
 import { Route as AuthenticatedResultsAttemptIdRouteImport } from './routes/_authenticated/results.$attemptId'
 
@@ -54,6 +55,11 @@ const AuthenticatedExamExamIdRoute = AuthenticatedExamExamIdRouteImport.update({
   path: '/exam/$examId',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedExamsIndexRoute = AuthenticatedExamsIndexRouteImport.update({
+  id: '/exams/',
+  path: '/exams/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedResultsIndexRoute =
   AuthenticatedResultsIndexRouteImport.update({
     id: '/results/',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
+  '/exams/': typeof AuthenticatedExamsIndexRoute
   '/results/': typeof AuthenticatedResultsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
+  '/exams': typeof AuthenticatedExamsIndexRoute
   '/results': typeof AuthenticatedResultsIndexRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/_authenticated/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
+  '/_authenticated/exams/': typeof AuthenticatedExamsIndexRoute
   '/_authenticated/results/': typeof AuthenticatedResultsIndexRoute
 }
 export interface FileRouteTypes {
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/exam/$examId'
     | '/results/$attemptId'
+    | '/exams/'
     | '/results/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/exam/$examId'
     | '/results/$attemptId'
+    | '/exams'
     | '/results'
   id:
     | '__root__'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/exam/$examId'
     | '/_authenticated/results/$attemptId'
+    | '/_authenticated/exams/'
     | '/_authenticated/results/'
   fileRoutesById: FileRoutesById
 }
@@ -190,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExamExamIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/exams/': {
+      id: '/_authenticated/exams/'
+      path: '/exams'
+      fullPath: '/exams/'
+      preLoaderRoute: typeof AuthenticatedExamsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/results/': {
       id: '/_authenticated/results/'
       path: '/results'
@@ -213,6 +232,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedExamExamIdRoute: typeof AuthenticatedExamExamIdRoute
   AuthenticatedResultsAttemptIdRoute: typeof AuthenticatedResultsAttemptIdRoute
+  AuthenticatedExamsIndexRoute: typeof AuthenticatedExamsIndexRoute
   AuthenticatedResultsIndexRoute: typeof AuthenticatedResultsIndexRoute
 }
 
@@ -222,6 +242,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedExamExamIdRoute: AuthenticatedExamExamIdRoute,
   AuthenticatedResultsAttemptIdRoute: AuthenticatedResultsAttemptIdRoute,
+  AuthenticatedExamsIndexRoute: AuthenticatedExamsIndexRoute,
   AuthenticatedResultsIndexRoute: AuthenticatedResultsIndexRoute,
 }
 
