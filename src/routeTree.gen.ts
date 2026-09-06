@@ -17,6 +17,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedGeoActivityRouteImport } from './routes/_authenticated/geo-activity'
 import { Route as AuthenticatedMyExamsRouteImport } from './routes/_authenticated/my-exams'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedPdfImportRouteImport } from './routes/_authenticated/pdf-import'
 import { Route as AuthenticatedQuestionBankRouteImport } from './routes/_authenticated/question-bank'
 import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
 import { Route as AuthenticatedExamsIndexRouteImport } from './routes/_authenticated/exams.index'
@@ -65,6 +66,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPdfImportRoute = AuthenticatedPdfImportRouteImport.update({
+  id: '/pdf-import',
+  path: '/pdf-import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQuestionBankRoute =
   AuthenticatedQuestionBankRouteImport.update({
     id: '/question-bank',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/pdf-import': typeof AuthenticatedPdfImportRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/pdf-import': typeof AuthenticatedPdfImportRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/_authenticated/my-exams': typeof AuthenticatedMyExamsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/pdf-import': typeof AuthenticatedPdfImportRoute
   '/_authenticated/question-bank': typeof AuthenticatedQuestionBankRoute
   '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/_authenticated/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/geo-activity'
     | '/my-exams'
     | '/notifications'
+    | '/pdf-import'
     | '/question-bank'
     | '/exam/$examId'
     | '/exams/$examId'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/geo-activity'
     | '/my-exams'
     | '/notifications'
+    | '/pdf-import'
     | '/question-bank'
     | '/exam/$examId'
     | '/exams/$examId'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/geo-activity'
     | '/_authenticated/my-exams'
     | '/_authenticated/notifications'
+    | '/_authenticated/pdf-import'
     | '/_authenticated/question-bank'
     | '/_authenticated/exam/$examId'
     | '/_authenticated/exams/$examId'
@@ -260,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pdf-import': {
+      id: '/_authenticated/pdf-import'
+      path: '/pdf-import'
+      fullPath: '/pdf-import'
+      preLoaderRoute: typeof AuthenticatedPdfImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/question-bank': {
       id: '/_authenticated/question-bank'
       path: '/question-bank'
@@ -311,6 +330,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGeoActivityRoute: typeof AuthenticatedGeoActivityRoute
   AuthenticatedMyExamsRoute: typeof AuthenticatedMyExamsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedPdfImportRoute: typeof AuthenticatedPdfImportRoute
   AuthenticatedQuestionBankRoute: typeof AuthenticatedQuestionBankRoute
   AuthenticatedExamExamIdRoute: typeof AuthenticatedExamExamIdRoute
   AuthenticatedExamsExamIdRoute: typeof AuthenticatedExamsExamIdRoute
@@ -325,6 +345,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGeoActivityRoute: AuthenticatedGeoActivityRoute,
   AuthenticatedMyExamsRoute: AuthenticatedMyExamsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedPdfImportRoute: AuthenticatedPdfImportRoute,
   AuthenticatedQuestionBankRoute: AuthenticatedQuestionBankRoute,
   AuthenticatedExamExamIdRoute: AuthenticatedExamExamIdRoute,
   AuthenticatedExamsExamIdRoute: AuthenticatedExamsExamIdRoute,
