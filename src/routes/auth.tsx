@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
