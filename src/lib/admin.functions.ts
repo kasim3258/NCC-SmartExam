@@ -101,3 +101,41 @@ export const listMembers = createServerFn({ method: "POST" })
     for (const r of roles ?? []) roleMap.set(r.user_id, r.role);
     return (profiles ?? []).map((p) => ({ ...p, role: roleMap.get(p.id) ?? "CADET" }));
   });
+
+/** Staff: update a member's profile details. */
+export const updateMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      userId: string;
+      name: string;
+      cadetCategory: "NCC B" | "NCC C" | null;
+      examParticipant: boolean;
+      examRequired: boolean;
+    }) =>
+      z
+        .object({
+          userId: z.string().uuid(),
+          name: z.string().min(1).max(120),
+          cadetCategory: z.enum(["NCC B", "NCC C"]).nullable(),
+          examParticipant: z.boolean(),
+          examRequired: z.boolean(),
+        })
+        .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        name: data.name,
+        cadet_category: data.cadetCategory,
+        exam_participant: data.examParticipant,
+        exam_required: data.examRequired,
+      })
+      .eq("id", data.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
