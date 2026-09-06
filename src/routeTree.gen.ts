@@ -10,33 +10,183 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedCadetsRouteImport } from './routes/_authenticated/cadets'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedMyExamsRouteImport } from './routes/_authenticated/my-exams'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedQuestionBankRouteImport } from './routes/_authenticated/question-bank'
+import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
+import { Route as AuthenticatedExamsIndexRouteImport } from './routes/_authenticated/exams.index'
+import { Route as AuthenticatedExamsExamIdRouteImport } from './routes/_authenticated/exams.$examId'
+import { Route as AuthenticatedResultsIndexRouteImport } from './routes/_authenticated/results.index'
+import { Route as AuthenticatedResultsAttemptIdRouteImport } from './routes/_authenticated/results.$attemptId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCadetsRoute = AuthenticatedCadetsRouteImport.update({
+  id: '/cadets',
+  path: '/cadets',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMyExamsRoute = AuthenticatedMyExamsRouteImport.update({
+  id: '/my-exams',
+  path: '/my-exams',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedQuestionBankRoute =
+  AuthenticatedQuestionBankRouteImport.update({
+    id: '/question-bank',
+    path: '/question-bank',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedExamExamIdRoute = AuthenticatedExamExamIdRouteImport.update({
+  id: '/exam/$examId',
+  path: '/exam/$examId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExamsIndexRoute = AuthenticatedExamsIndexRouteImport.update({
+  id: '/exams/',
+  path: '/exams/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExamsExamIdRoute =
+  AuthenticatedExamsExamIdRouteImport.update({
+    id: '/exams/$examId',
+    path: '/exams/$examId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedResultsIndexRoute =
+  AuthenticatedResultsIndexRouteImport.update({
+    id: '/results/',
+    path: '/results/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedResultsAttemptIdRoute =
+  AuthenticatedResultsAttemptIdRouteImport.update({
+    id: '/results/$attemptId',
+    path: '/results/$attemptId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/cadets': typeof AuthenticatedCadetsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-exams': typeof AuthenticatedMyExamsRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/question-bank': typeof AuthenticatedQuestionBankRoute
+  '/exam/$examId': typeof AuthenticatedExamExamIdRoute
+  '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
+  '/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
+  '/exams/': typeof AuthenticatedExamsIndexRoute
+  '/results/': typeof AuthenticatedResultsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/cadets': typeof AuthenticatedCadetsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-exams': typeof AuthenticatedMyExamsRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/question-bank': typeof AuthenticatedQuestionBankRoute
+  '/exam/$examId': typeof AuthenticatedExamExamIdRoute
+  '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
+  '/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
+  '/exams': typeof AuthenticatedExamsIndexRoute
+  '/results': typeof AuthenticatedResultsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/cadets': typeof AuthenticatedCadetsRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/my-exams': typeof AuthenticatedMyExamsRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/question-bank': typeof AuthenticatedQuestionBankRoute
+  '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
+  '/_authenticated/exams/$examId': typeof AuthenticatedExamsExamIdRoute
+  '/_authenticated/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
+  '/_authenticated/exams/': typeof AuthenticatedExamsIndexRoute
+  '/_authenticated/results/': typeof AuthenticatedResultsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/cadets'
+    | '/dashboard'
+    | '/my-exams'
+    | '/notifications'
+    | '/question-bank'
+    | '/exam/$examId'
+    | '/exams/$examId'
+    | '/results/$attemptId'
+    | '/exams/'
+    | '/results/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/cadets'
+    | '/dashboard'
+    | '/my-exams'
+    | '/notifications'
+    | '/question-bank'
+    | '/exam/$examId'
+    | '/exams/$examId'
+    | '/results/$attemptId'
+    | '/exams'
+    | '/results'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/cadets'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/my-exams'
+    | '/_authenticated/notifications'
+    | '/_authenticated/question-bank'
+    | '/_authenticated/exam/$examId'
+    | '/_authenticated/exams/$examId'
+    | '/_authenticated/results/$attemptId'
+    | '/_authenticated/exams/'
+    | '/_authenticated/results/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +198,126 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/cadets': {
+      id: '/_authenticated/cadets'
+      path: '/cadets'
+      fullPath: '/cadets'
+      preLoaderRoute: typeof AuthenticatedCadetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-exams': {
+      id: '/_authenticated/my-exams'
+      path: '/my-exams'
+      fullPath: '/my-exams'
+      preLoaderRoute: typeof AuthenticatedMyExamsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/question-bank': {
+      id: '/_authenticated/question-bank'
+      path: '/question-bank'
+      fullPath: '/question-bank'
+      preLoaderRoute: typeof AuthenticatedQuestionBankRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exam/$examId': {
+      id: '/_authenticated/exam/$examId'
+      path: '/exam/$examId'
+      fullPath: '/exam/$examId'
+      preLoaderRoute: typeof AuthenticatedExamExamIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exams/': {
+      id: '/_authenticated/exams/'
+      path: '/exams'
+      fullPath: '/exams/'
+      preLoaderRoute: typeof AuthenticatedExamsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exams/$examId': {
+      id: '/_authenticated/exams/$examId'
+      path: '/exams/$examId'
+      fullPath: '/exams/$examId'
+      preLoaderRoute: typeof AuthenticatedExamsExamIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/results/': {
+      id: '/_authenticated/results/'
+      path: '/results'
+      fullPath: '/results/'
+      preLoaderRoute: typeof AuthenticatedResultsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/results/$attemptId': {
+      id: '/_authenticated/results/$attemptId'
+      path: '/results/$attemptId'
+      fullPath: '/results/$attemptId'
+      preLoaderRoute: typeof AuthenticatedResultsAttemptIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCadetsRoute: typeof AuthenticatedCadetsRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedMyExamsRoute: typeof AuthenticatedMyExamsRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedQuestionBankRoute: typeof AuthenticatedQuestionBankRoute
+  AuthenticatedExamExamIdRoute: typeof AuthenticatedExamExamIdRoute
+  AuthenticatedExamsExamIdRoute: typeof AuthenticatedExamsExamIdRoute
+  AuthenticatedResultsAttemptIdRoute: typeof AuthenticatedResultsAttemptIdRoute
+  AuthenticatedExamsIndexRoute: typeof AuthenticatedExamsIndexRoute
+  AuthenticatedResultsIndexRoute: typeof AuthenticatedResultsIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCadetsRoute: AuthenticatedCadetsRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedMyExamsRoute: AuthenticatedMyExamsRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedQuestionBankRoute: AuthenticatedQuestionBankRoute,
+  AuthenticatedExamExamIdRoute: AuthenticatedExamExamIdRoute,
+  AuthenticatedExamsExamIdRoute: AuthenticatedExamsExamIdRoute,
+  AuthenticatedResultsAttemptIdRoute: AuthenticatedResultsAttemptIdRoute,
+  AuthenticatedExamsIndexRoute: AuthenticatedExamsIndexRoute,
+  AuthenticatedResultsIndexRoute: AuthenticatedResultsIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
