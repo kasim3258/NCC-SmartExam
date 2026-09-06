@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCadetsRouteImport } from './routes/_authenticated/cadets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedGeoActivityRouteImport } from './routes/_authenticated/geo-activity'
 import { Route as AuthenticatedMyExamsRouteImport } from './routes/_authenticated/my-exams'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedQuestionBankRouteImport } from './routes/_authenticated/question-bank'
@@ -47,6 +48,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedGeoActivityRoute =
+  AuthenticatedGeoActivityRouteImport.update({
+    id: '/geo-activity',
+    path: '/geo-activity',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMyExamsRoute = AuthenticatedMyExamsRouteImport.update({
   id: '/my-exams',
   path: '/my-exams',
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cadets': typeof AuthenticatedCadetsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
@@ -112,6 +120,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cadets': typeof AuthenticatedCadetsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
@@ -128,6 +137,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/cadets': typeof AuthenticatedCadetsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/_authenticated/my-exams': typeof AuthenticatedMyExamsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/question-bank': typeof AuthenticatedQuestionBankRoute
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadets'
     | '/dashboard'
+    | '/geo-activity'
     | '/my-exams'
     | '/notifications'
     | '/question-bank'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadets'
     | '/dashboard'
+    | '/geo-activity'
     | '/my-exams'
     | '/notifications'
     | '/question-bank'
@@ -173,6 +185,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/cadets'
     | '/_authenticated/dashboard'
+    | '/_authenticated/geo-activity'
     | '/_authenticated/my-exams'
     | '/_authenticated/notifications'
     | '/_authenticated/question-bank'
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/geo-activity': {
+      id: '/_authenticated/geo-activity'
+      path: '/geo-activity'
+      fullPath: '/geo-activity'
+      preLoaderRoute: typeof AuthenticatedGeoActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my-exams': {
@@ -288,6 +308,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadetsRoute: typeof AuthenticatedCadetsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedGeoActivityRoute: typeof AuthenticatedGeoActivityRoute
   AuthenticatedMyExamsRoute: typeof AuthenticatedMyExamsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedQuestionBankRoute: typeof AuthenticatedQuestionBankRoute
@@ -301,6 +322,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadetsRoute: AuthenticatedCadetsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedGeoActivityRoute: AuthenticatedGeoActivityRoute,
   AuthenticatedMyExamsRoute: AuthenticatedMyExamsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedQuestionBankRoute: AuthenticatedQuestionBankRoute,
