@@ -185,7 +185,6 @@ function QuestionBank() {
                   {q.source_type.replaceAll("_", " ").toLowerCase()}
                   {q.source_page ? ` · page ${q.source_page}` : ""}
                 </p>
-                {q.review_status !== "APPROVED" || q.review_status !== "REJECTED" ? null : null}
                 <div className="flex gap-2">
                   {q.review_status !== "APPROVED" && (
                     <Button

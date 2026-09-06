@@ -74,7 +74,7 @@ function ExamsPage() {
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("exams").insert({ ...form, created_by: user?.id });
+      const { error } = await supabase.from("exams").insert({ ...form, created_by: user?.id ?? null });
       if (error) throw error;
     },
     onSuccess: () => {
