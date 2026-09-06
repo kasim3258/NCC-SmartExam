@@ -509,7 +509,7 @@ Each item: {"question":string,"a":string,"b":string,"c":string,"d":string,"corre
       items.map((q, i) => ({
         session_id: session.id,
         question_order: i + 1,
-        question_text: String(q.question),
+        question: String(q.question),
         option_a: String(q.a),
         option_b: String(q.b),
         option_c: String(q.c),
