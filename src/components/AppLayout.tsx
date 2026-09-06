@@ -23,7 +23,7 @@ const cadetNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/my-exams", label: "My Exams", icon: ClipboardList },
   { to: "/results", label: "Results", icon: BookOpen },
-  { to: "/practice", label: "AI Practice", icon: Brain },
+  
   { to: "/notifications", label: "Notifications", icon: Bell },
 ];
 
