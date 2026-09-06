@@ -19,6 +19,7 @@ import { Route as AuthenticatedGeoActivityRouteImport } from './routes/_authenti
 import { Route as AuthenticatedMyExamsRouteImport } from './routes/_authenticated/my-exams'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedPdfImportRouteImport } from './routes/_authenticated/pdf-import'
+import { Route as AuthenticatedPracticeRouteImport } from './routes/_authenticated/practice'
 import { Route as AuthenticatedQuestionBankRouteImport } from './routes/_authenticated/question-bank'
 import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
 import { Route as AuthenticatedExamsIndexRouteImport } from './routes/_authenticated/exams.index'
@@ -77,6 +78,11 @@ const AuthenticatedPdfImportRoute = AuthenticatedPdfImportRouteImport.update({
   path: '/pdf-import',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPracticeRoute = AuthenticatedPracticeRouteImport.update({
+  id: '/practice',
+  path: '/practice',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQuestionBankRoute =
   AuthenticatedQuestionBankRouteImport.update({
     id: '/question-bank',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/pdf-import': typeof AuthenticatedPdfImportRoute
+  '/practice': typeof AuthenticatedPracticeRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/pdf-import': typeof AuthenticatedPdfImportRoute
+  '/practice': typeof AuthenticatedPracticeRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/_authenticated/my-exams': typeof AuthenticatedMyExamsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/pdf-import': typeof AuthenticatedPdfImportRoute
+  '/_authenticated/practice': typeof AuthenticatedPracticeRoute
   '/_authenticated/question-bank': typeof AuthenticatedQuestionBankRoute
   '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/_authenticated/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/my-exams'
     | '/notifications'
     | '/pdf-import'
+    | '/practice'
     | '/question-bank'
     | '/exam/$examId'
     | '/exams/$examId'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/my-exams'
     | '/notifications'
     | '/pdf-import'
+    | '/practice'
     | '/question-bank'
     | '/exam/$examId'
     | '/exams/$examId'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-exams'
     | '/_authenticated/notifications'
     | '/_authenticated/pdf-import'
+    | '/_authenticated/practice'
     | '/_authenticated/question-bank'
     | '/_authenticated/exam/$examId'
     | '/_authenticated/exams/$examId'
@@ -298,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPdfImportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/practice': {
+      id: '/_authenticated/practice'
+      path: '/practice'
+      fullPath: '/practice'
+      preLoaderRoute: typeof AuthenticatedPracticeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/question-bank': {
       id: '/_authenticated/question-bank'
       path: '/question-bank'
@@ -351,6 +370,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyExamsRoute: typeof AuthenticatedMyExamsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPdfImportRoute: typeof AuthenticatedPdfImportRoute
+  AuthenticatedPracticeRoute: typeof AuthenticatedPracticeRoute
   AuthenticatedQuestionBankRoute: typeof AuthenticatedQuestionBankRoute
   AuthenticatedExamExamIdRoute: typeof AuthenticatedExamExamIdRoute
   AuthenticatedExamsExamIdRoute: typeof AuthenticatedExamsExamIdRoute
@@ -367,6 +387,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyExamsRoute: AuthenticatedMyExamsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPdfImportRoute: AuthenticatedPdfImportRoute,
+  AuthenticatedPracticeRoute: AuthenticatedPracticeRoute,
   AuthenticatedQuestionBankRoute: AuthenticatedQuestionBankRoute,
   AuthenticatedExamExamIdRoute: AuthenticatedExamExamIdRoute,
   AuthenticatedExamsExamIdRoute: AuthenticatedExamsExamIdRoute,
