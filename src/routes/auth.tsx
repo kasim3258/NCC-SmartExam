@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -44,12 +44,52 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"NCC B" | "NCC C">("NCC B");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) router.navigate({ to: "/dashboard" });
     });
   }, [router]);
+
+  const signInWithGoogle = async () => {
+    setLoading(true);
+    const { lovable } = await import("@/integrations/lovable");
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      setLoading(false);
+      toast.error("Google sign-in failed. Please try again.");
+      return;
+    }
+    if (result.redirected) return;
+    setLoading(false);
+    router.navigate({ to: "/dashboard" });
+  };
+
+  const signInAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: adminEmail,
+      password: adminPassword,
+    });
+    if (error || !data.user) {
+      setLoading(false);
+      toast.error(error?.message ?? "Sign in failed.");
+      return;
+    }
+    const { data: staff } = await supabase.rpc("is_staff", { _user_id: data.user.id });
+    setLoading(false);
+    if (!staff) {
+      await supabase.auth.signOut();
+      toast.error("This account does not have administrator access.");
+      return;
+    }
+    router.navigate({ to: "/dashboard" });
+  };
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +102,7 @@ function AuthPage() {
     }
     router.navigate({ to: "/dashboard" });
   };
+
 
   const signUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,11 +145,27 @@ function AuthPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={loading}
+              onClick={signInWithGoogle}
+            >
+              <Mail className="mr-2 h-4 w-4" /> Continue with Google
+            </Button>
+            <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              or use email
+              <span className="h-px flex-1 bg-border" />
+            </div>
             <Tabs defaultValue="signin">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
                 <TabsTrigger value="signup">Register</TabsTrigger>
+                <TabsTrigger value="admin">Admin</TabsTrigger>
               </TabsList>
+
 
               <TabsContent value="signin">
                 <form onSubmit={signIn} className="space-y-4 pt-4">
@@ -187,7 +244,39 @@ function AuthPage() {
                   </Button>
                 </form>
               </TabsContent>
+
+              <TabsContent value="admin">
+                <form onSubmit={signInAdmin} className="space-y-4 pt-4">
+                  <p className="text-xs text-muted-foreground">
+                    For Main Admins and Admins only.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="ad-email">Admin email</Label>
+                    <Input
+                      id="ad-email"
+                      type="email"
+                      required
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ad-pass">Password</Label>
+                    <Input
+                      id="ad-pass"
+                      type="password"
+                      required
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Signing in…" : "Admin sign in"}
+                  </Button>
+                </form>
+              </TabsContent>
             </Tabs>
+
           </CardContent>
         </Card>
       </div>

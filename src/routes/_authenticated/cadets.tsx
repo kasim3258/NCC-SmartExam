@@ -1,12 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { listMembers, setUserRole } from "@/lib/admin.functions";
+import { Pencil } from "lucide-react";
+import { listMembers, setUserRole, updateMember } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -14,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 
 export const Route = createFileRoute("/_authenticated/cadets")({
   head: () => ({
@@ -65,8 +80,27 @@ function CadetsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [editing, setEditing] = useState<{
+    userId: string;
+    name: string;
+    cadetCategory: "NCC B" | "NCC C" | null;
+    examParticipant: boolean;
+    examRequired: boolean;
+  } | null>(null);
+
+  const saveMember = useMutation({
+    mutationFn: (v: NonNullable<typeof editing>) => updateMember({ data: v }),
+    onSuccess: () => {
+      toast.success("Member details updated.");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["members"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!isAdmin)
     return <p className="text-muted-foreground">You do not have access to this page.</p>;
+
 
   const stats = new Map<string, { attempts: number; avg: number }>();
   for (const a of perf.data ?? []) {
@@ -101,7 +135,25 @@ function CadetsPage() {
                       <CardTitle className="text-base">{m.name || "Unnamed"}</CardTitle>
                       <CardDescription>{m.email}</CardDescription>
                     </div>
-                    <Badge variant="outline">{m.cadet_category ?? "—"}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{m.cadet_category ?? "—"}</Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Edit ${m.email}`}
+                        onClick={() =>
+                          setEditing({
+                            userId: m.id,
+                            name: m.name ?? "",
+                            cadetCategory: (m.cadet_category as "NCC B" | null) ?? null,
+                            examParticipant: !!m.exam_participant,
+                            examRequired: !!m.exam_required,
+                          })
+                        }
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center justify-between gap-3">
@@ -135,6 +187,76 @@ function CadetsPage() {
           })}
         </div>
       )}
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit member</DialogTitle>
+            <DialogDescription>Update this member's details.</DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="ed-name">Full name</Label>
+                <Input
+                  id="ed-name"
+                  value={editing.name}
+                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Certificate</Label>
+                <Select
+                  value={editing.cadetCategory ?? "none"}
+                  onValueChange={(v) =>
+                    setEditing({
+                      ...editing,
+                      cadetCategory: v === "none" ? null : (v as "NCC B"),
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Not set</SelectItem>
+                    <SelectItem value="NCC B">NCC B</SelectItem>
+                    <SelectItem value="NCC C">NCC C</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="ed-part">Exam participant</Label>
+                <Switch
+                  id="ed-part"
+                  checked={editing.examParticipant}
+                  onCheckedChange={(v) => setEditing({ ...editing, examParticipant: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="ed-req">Exam required</Label>
+                <Switch
+                  id="ed-req"
+                  checked={editing.examRequired}
+                  onCheckedChange={(v) => setEditing({ ...editing, examRequired: v })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={saveMember.isPending || !editing?.name.trim()}
+              onClick={() => editing && saveMember.mutate(editing)}
+            >
+              {saveMember.isPending ? "Saving…" : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
