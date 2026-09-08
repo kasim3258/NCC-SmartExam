@@ -225,6 +225,34 @@ function AuthPage() {
 
 
               <TabsContent value="signin">
+                {forgot ? (
+                  <form onSubmit={sendReset} className="space-y-4 pt-4">
+                    <p className="text-xs text-muted-foreground">
+                      Enter your account email and we'll send you a link to set a new password.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="fp-email">Email</Label>
+                      <Input
+                        id="fp-email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Sending…" : "Send reset link"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setForgot(false)}
+                    >
+                      Back to sign in
+                    </Button>
+                  </form>
+                ) : (
                 <form onSubmit={signIn} className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="si-email">Email</Label>
