@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
-import { listMembers, setUserRole, updateMember } from "@/lib/admin.functions";
+import { deleteMember, listMembers, setUserRole, updateMember } from "@/lib/admin.functions";
+import { DeleteButton } from "@/components/DeleteButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,6 +77,16 @@ function CadetsPage() {
     onSuccess: () => {
       toast.success("Role updated.");
       qc.invalidateQueries({ queryKey: ["members"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeMember = useMutation({
+    mutationFn: (userId: string) => deleteMember({ data: { userId } }),
+    onSuccess: () => {
+      toast.success("Member deleted.");
+      qc.invalidateQueries({ queryKey: ["members"] });
+      qc.invalidateQueries({ queryKey: ["all-attempts"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -153,6 +164,13 @@ function CadetsPage() {
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {isMainAdmin && (
+                        <DeleteButton
+                          label={m.name || m.email}
+                          description="This account and all of its exam records, results, practice history and notifications will be removed permanently."
+                          onConfirm={() => removeMember.mutate(m.id)}
+                        />
+                      )}
                     </div>
                   </div>
                 </CardHeader>
