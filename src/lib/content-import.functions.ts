@@ -745,7 +745,7 @@ export const reviewPracticeQuestion = createServerFn({ method: "POST" })
       reviewer_id: context.userId,
       action: data.action,
       old_value: before,
-      new_value: patch,
+      new_value: patch as never,
       notes: data.notes ?? null,
     });
     await audit(
