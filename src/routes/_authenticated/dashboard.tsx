@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { listMyAssignments } from "@/lib/exam.functions";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -63,25 +66,29 @@ function Dashboard() {
     },
   });
 
+  const fetchMine = useServerFn(listMyAssignments);
+
   const cadetData = useQuery({
     queryKey: ["cadet-dashboard", user?.id],
     enabled: isCadet && !!user,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    staleTime: 0,
     queryFn: async () => {
       const [assignments, attempts] = await Promise.all([
-        supabase
-          .from("exam_assignments")
-          .select("id, mandatory, deadline, status, exams(id, title, duration_minutes)")
-          .order("deadline", { ascending: true }),
+        fetchMine(),
         supabase
           .from("exam_attempts")
           .select("id, score, total_questions, correct_answers, status, exams(title)")
+          .eq("user_id", user!.id)
           .eq("status", "completed")
           .order("submitted_at", { ascending: false })
           .limit(5),
       ]);
-      return { assignments: assignments.data ?? [], attempts: attempts.data ?? [] };
+      return { assignments, attempts: attempts.data ?? [] };
     },
   });
+
 
   if (isAdmin) {
     const s = staffStats.data;
