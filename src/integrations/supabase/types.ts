@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_value: Json | null
+          before_value: Json | null
+          created_at: string
+          id: string
+          object_id: string | null
+          object_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          id?: string
+          object_id?: string | null
+          object_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          id?: string
+          object_id?: string | null
+          object_type?: string | null
+        }
+        Relationships: []
+      }
       ai_practice_questions: {
         Row: {
           correct_answer: string
@@ -168,6 +201,151 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_imports: {
+        Row: {
+          blocked_urls: Json
+          completed_at: string | null
+          content_source_id: string
+          created_at: string
+          duplicates_found: number
+          error_message: string | null
+          id: string
+          items_found: number
+          log: Json
+          questions_approved: number
+          questions_found: number
+          questions_rejected: number
+          started_at: string
+          started_by: string | null
+          status: Database["public"]["Enums"]["content_import_status"]
+          subjects_found: number
+          topics_found: number
+          updated_at: string
+        }
+        Insert: {
+          blocked_urls?: Json
+          completed_at?: string | null
+          content_source_id: string
+          created_at?: string
+          duplicates_found?: number
+          error_message?: string | null
+          id?: string
+          items_found?: number
+          log?: Json
+          questions_approved?: number
+          questions_found?: number
+          questions_rejected?: number
+          started_at?: string
+          started_by?: string | null
+          status?: Database["public"]["Enums"]["content_import_status"]
+          subjects_found?: number
+          topics_found?: number
+          updated_at?: string
+        }
+        Update: {
+          blocked_urls?: Json
+          completed_at?: string | null
+          content_source_id?: string
+          created_at?: string
+          duplicates_found?: number
+          error_message?: string | null
+          id?: string
+          items_found?: number
+          log?: Json
+          questions_approved?: number
+          questions_found?: number
+          questions_rejected?: number
+          started_at?: string
+          started_by?: string | null
+          status?: Database["public"]["Enums"]["content_import_status"]
+          subjects_found?: number
+          topics_found?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_imports_content_source_id_fkey"
+            columns: ["content_source_id"]
+            isOneToOne: false
+            referencedRelation: "content_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_reviews: {
+        Row: {
+          action: string
+          id: string
+          new_value: Json | null
+          notes: string | null
+          old_value: Json | null
+          question_id: string | null
+          reviewed_at: string
+          reviewer_id: string | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          new_value?: Json | null
+          notes?: string | null
+          old_value?: Json | null
+          question_id?: string | null
+          reviewed_at?: string
+          reviewer_id?: string | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          new_value?: Json | null
+          notes?: string | null
+          old_value?: Json | null
+          question_id?: string | null
+          reviewed_at?: string
+          reviewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reviews_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "practice_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_sources: {
+        Row: {
+          base_url: string
+          created_at: string
+          enabled: boolean
+          id: string
+          name: string
+          notes: string | null
+          source_type: string
+          updated_at: string
+        }
+        Insert: {
+          base_url: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name: string
+          notes?: string | null
+          source_type?: string
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          notes?: string | null
+          source_type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       exam_assignments: {
         Row: {
@@ -559,6 +737,183 @@ export type Database = {
           },
         ]
       }
+      practice_questions: {
+        Row: {
+          ai_confidence: number | null
+          certificate_level: Database["public"]["Enums"]["certificate_level"]
+          content_hash: string
+          correct_answer: string | null
+          created_at: string
+          created_by: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          explanation: string | null
+          id: string
+          import_id: string | null
+          needs_review: boolean
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question_text: string
+          repetition_count: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_name: string | null
+          source_reference: string | null
+          source_type: string
+          source_url: string | null
+          status: Database["public"]["Enums"]["practice_question_status"]
+          subject_id: string | null
+          topic_id: string | null
+          updated_at: string
+          wing: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          certificate_level?: Database["public"]["Enums"]["certificate_level"]
+          content_hash: string
+          correct_answer?: string | null
+          created_at?: string
+          created_by?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          explanation?: string | null
+          id?: string
+          import_id?: string | null
+          needs_review?: boolean
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question_text: string
+          repetition_count?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_name?: string | null
+          source_reference?: string | null
+          source_type?: string
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["practice_question_status"]
+          subject_id?: string | null
+          topic_id?: string | null
+          updated_at?: string
+          wing?: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          certificate_level?: Database["public"]["Enums"]["certificate_level"]
+          content_hash?: string
+          correct_answer?: string | null
+          created_at?: string
+          created_by?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          explanation?: string | null
+          id?: string
+          import_id?: string | null
+          needs_review?: boolean
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          question_text?: string
+          repetition_count?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_name?: string | null
+          source_reference?: string | null
+          source_type?: string
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["practice_question_status"]
+          subject_id?: string | null
+          topic_id?: string | null
+          updated_at?: string
+          wing?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_questions_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "content_imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_questions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "practice_subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_questions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "practice_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_subjects: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          wing: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          wing?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          wing?: string
+        }
+        Relationships: []
+      }
+      practice_topics: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          subject_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          subject_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          subject_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_topics_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "practice_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           cadet_category: Database["public"]["Enums"]["cadet_category"] | null
@@ -591,6 +946,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      question_sources: {
+        Row: {
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          question_id: string
+          source_name: string
+          source_reference: string | null
+          source_url: string | null
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          question_id: string
+          source_name: string
+          source_reference?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          question_id?: string
+          source_name?: string
+          source_reference?: string | null
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_sources_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "practice_questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
@@ -816,7 +1209,14 @@ export type Database = {
       assignment_status: "assigned" | "started" | "completed" | "expired"
       attempt_status: "in_progress" | "completed" | "expired"
       cadet_category: "NCC B" | "NCC C"
+      certificate_level: "B" | "C" | "BOTH"
       concept_priority: "VERY_HIGH" | "HIGH" | "NORMAL" | "LOW"
+      content_import_status:
+        | "PENDING"
+        | "RUNNING"
+        | "COMPLETED"
+        | "FAILED"
+        | "ROLLED_BACK"
       difficulty_level: "Easy" | "Medium" | "Hard"
       location_event_type: "LOGIN" | "EXAM_START" | "EXAM_SUBMIT"
       pdf_status:
@@ -827,6 +1227,12 @@ export type Database = {
         | "REVIEW"
         | "COMPLETED"
         | "FAILED"
+      practice_question_status:
+        | "PENDING_REVIEW"
+        | "APPROVED"
+        | "REJECTED"
+        | "DRAFT"
+        | "ARCHIVED"
       practice_status: "in_progress" | "completed" | "abandoned"
       question_source_type: "MANUAL" | "PDF_EXISTING_QUESTION" | "AI_GENERATED"
       review_status: "PENDING" | "APPROVED" | "REJECTED"
@@ -961,7 +1367,15 @@ export const Constants = {
       assignment_status: ["assigned", "started", "completed", "expired"],
       attempt_status: ["in_progress", "completed", "expired"],
       cadet_category: ["NCC B", "NCC C"],
+      certificate_level: ["B", "C", "BOTH"],
       concept_priority: ["VERY_HIGH", "HIGH", "NORMAL", "LOW"],
+      content_import_status: [
+        "PENDING",
+        "RUNNING",
+        "COMPLETED",
+        "FAILED",
+        "ROLLED_BACK",
+      ],
       difficulty_level: ["Easy", "Medium", "Hard"],
       location_event_type: ["LOGIN", "EXAM_START", "EXAM_SUBMIT"],
       pdf_status: [
@@ -972,6 +1386,13 @@ export const Constants = {
         "REVIEW",
         "COMPLETED",
         "FAILED",
+      ],
+      practice_question_status: [
+        "PENDING_REVIEW",
+        "APPROVED",
+        "REJECTED",
+        "DRAFT",
+        "ARCHIVED",
       ],
       practice_status: ["in_progress", "completed", "abandoned"],
       question_source_type: ["MANUAL", "PDF_EXISTING_QUESTION", "AI_GENERATED"],

@@ -1,0 +1,1 @@
+DROP POLICY "Cadets read approved practice questions" ON public.practice_questions;

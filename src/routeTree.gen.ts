@@ -15,13 +15,16 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAiReviewRouteImport } from './routes/_authenticated/ai-review'
 import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
+import { Route as AuthenticatedArmyPracticeRouteImport } from './routes/_authenticated/army-practice'
 import { Route as AuthenticatedCadetsRouteImport } from './routes/_authenticated/cadets'
+import { Route as AuthenticatedContentSourcesRouteImport } from './routes/_authenticated/content-sources'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedGeoActivityRouteImport } from './routes/_authenticated/geo-activity'
 import { Route as AuthenticatedMyExamsRouteImport } from './routes/_authenticated/my-exams'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedPdfImportRouteImport } from './routes/_authenticated/pdf-import'
 import { Route as AuthenticatedPracticeRouteImport } from './routes/_authenticated/practice'
+import { Route as AuthenticatedPracticeReviewRouteImport } from './routes/_authenticated/practice-review'
 import { Route as AuthenticatedQuestionBankRouteImport } from './routes/_authenticated/question-bank'
 import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
 import { Route as AuthenticatedExamsIndexRouteImport } from './routes/_authenticated/exams.index'
@@ -58,11 +61,23 @@ const AuthenticatedAnalysisRoute = AuthenticatedAnalysisRouteImport.update({
   path: '/analysis',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedArmyPracticeRoute =
+  AuthenticatedArmyPracticeRouteImport.update({
+    id: '/army-practice',
+    path: '/army-practice',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCadetsRoute = AuthenticatedCadetsRouteImport.update({
   id: '/cadets',
   path: '/cadets',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedContentSourcesRoute =
+  AuthenticatedContentSourcesRouteImport.update({
+    id: '/content-sources',
+    path: '/content-sources',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -95,6 +110,12 @@ const AuthenticatedPracticeRoute = AuthenticatedPracticeRouteImport.update({
   path: '/practice',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPracticeReviewRoute =
+  AuthenticatedPracticeReviewRouteImport.update({
+    id: '/practice-review',
+    path: '/practice-review',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedQuestionBankRoute =
   AuthenticatedQuestionBankRouteImport.update({
     id: '/question-bank',
@@ -136,13 +157,16 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
+  '/army-practice': typeof AuthenticatedArmyPracticeRoute
   '/cadets': typeof AuthenticatedCadetsRoute
+  '/content-sources': typeof AuthenticatedContentSourcesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/pdf-import': typeof AuthenticatedPdfImportRoute
   '/practice': typeof AuthenticatedPracticeRoute
+  '/practice-review': typeof AuthenticatedPracticeReviewRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -156,13 +180,16 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
+  '/army-practice': typeof AuthenticatedArmyPracticeRoute
   '/cadets': typeof AuthenticatedCadetsRoute
+  '/content-sources': typeof AuthenticatedContentSourcesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/my-exams': typeof AuthenticatedMyExamsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/pdf-import': typeof AuthenticatedPdfImportRoute
   '/practice': typeof AuthenticatedPracticeRoute
+  '/practice-review': typeof AuthenticatedPracticeReviewRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -178,13 +205,16 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/ai-review': typeof AuthenticatedAiReviewRoute
   '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
+  '/_authenticated/army-practice': typeof AuthenticatedArmyPracticeRoute
   '/_authenticated/cadets': typeof AuthenticatedCadetsRoute
+  '/_authenticated/content-sources': typeof AuthenticatedContentSourcesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/_authenticated/my-exams': typeof AuthenticatedMyExamsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/pdf-import': typeof AuthenticatedPdfImportRoute
   '/_authenticated/practice': typeof AuthenticatedPracticeRoute
+  '/_authenticated/practice-review': typeof AuthenticatedPracticeReviewRoute
   '/_authenticated/question-bank': typeof AuthenticatedQuestionBankRoute
   '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/_authenticated/exams/$examId': typeof AuthenticatedExamsExamIdRoute
@@ -200,13 +230,16 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/ai-review'
     | '/analysis'
+    | '/army-practice'
     | '/cadets'
+    | '/content-sources'
     | '/dashboard'
     | '/geo-activity'
     | '/my-exams'
     | '/notifications'
     | '/pdf-import'
     | '/practice'
+    | '/practice-review'
     | '/question-bank'
     | '/exam/$examId'
     | '/exams/$examId'
@@ -220,13 +253,16 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/ai-review'
     | '/analysis'
+    | '/army-practice'
     | '/cadets'
+    | '/content-sources'
     | '/dashboard'
     | '/geo-activity'
     | '/my-exams'
     | '/notifications'
     | '/pdf-import'
     | '/practice'
+    | '/practice-review'
     | '/question-bank'
     | '/exam/$examId'
     | '/exams/$examId'
@@ -241,13 +277,16 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/ai-review'
     | '/_authenticated/analysis'
+    | '/_authenticated/army-practice'
     | '/_authenticated/cadets'
+    | '/_authenticated/content-sources'
     | '/_authenticated/dashboard'
     | '/_authenticated/geo-activity'
     | '/_authenticated/my-exams'
     | '/_authenticated/notifications'
     | '/_authenticated/pdf-import'
     | '/_authenticated/practice'
+    | '/_authenticated/practice-review'
     | '/_authenticated/question-bank'
     | '/_authenticated/exam/$examId'
     | '/_authenticated/exams/$examId'
@@ -307,11 +346,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalysisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/army-practice': {
+      id: '/_authenticated/army-practice'
+      path: '/army-practice'
+      fullPath: '/army-practice'
+      preLoaderRoute: typeof AuthenticatedArmyPracticeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/cadets': {
       id: '/_authenticated/cadets'
       path: '/cadets'
       fullPath: '/cadets'
       preLoaderRoute: typeof AuthenticatedCadetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/content-sources': {
+      id: '/_authenticated/content-sources'
+      path: '/content-sources'
+      fullPath: '/content-sources'
+      preLoaderRoute: typeof AuthenticatedContentSourcesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -354,6 +407,13 @@ declare module '@tanstack/react-router' {
       path: '/practice'
       fullPath: '/practice'
       preLoaderRoute: typeof AuthenticatedPracticeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/practice-review': {
+      id: '/_authenticated/practice-review'
+      path: '/practice-review'
+      fullPath: '/practice-review'
+      preLoaderRoute: typeof AuthenticatedPracticeReviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/question-bank': {
@@ -404,13 +464,16 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReviewRoute: typeof AuthenticatedAiReviewRoute
   AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
+  AuthenticatedArmyPracticeRoute: typeof AuthenticatedArmyPracticeRoute
   AuthenticatedCadetsRoute: typeof AuthenticatedCadetsRoute
+  AuthenticatedContentSourcesRoute: typeof AuthenticatedContentSourcesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGeoActivityRoute: typeof AuthenticatedGeoActivityRoute
   AuthenticatedMyExamsRoute: typeof AuthenticatedMyExamsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPdfImportRoute: typeof AuthenticatedPdfImportRoute
   AuthenticatedPracticeRoute: typeof AuthenticatedPracticeRoute
+  AuthenticatedPracticeReviewRoute: typeof AuthenticatedPracticeReviewRoute
   AuthenticatedQuestionBankRoute: typeof AuthenticatedQuestionBankRoute
   AuthenticatedExamExamIdRoute: typeof AuthenticatedExamExamIdRoute
   AuthenticatedExamsExamIdRoute: typeof AuthenticatedExamsExamIdRoute
@@ -422,13 +485,16 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReviewRoute: AuthenticatedAiReviewRoute,
   AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
+  AuthenticatedArmyPracticeRoute: AuthenticatedArmyPracticeRoute,
   AuthenticatedCadetsRoute: AuthenticatedCadetsRoute,
+  AuthenticatedContentSourcesRoute: AuthenticatedContentSourcesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGeoActivityRoute: AuthenticatedGeoActivityRoute,
   AuthenticatedMyExamsRoute: AuthenticatedMyExamsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPdfImportRoute: AuthenticatedPdfImportRoute,
   AuthenticatedPracticeRoute: AuthenticatedPracticeRoute,
+  AuthenticatedPracticeReviewRoute: AuthenticatedPracticeReviewRoute,
   AuthenticatedQuestionBankRoute: AuthenticatedQuestionBankRoute,
   AuthenticatedExamExamIdRoute: AuthenticatedExamExamIdRoute,
   AuthenticatedExamsExamIdRoute: AuthenticatedExamsExamIdRoute,

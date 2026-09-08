@@ -13,6 +13,8 @@ import {
   BarChart3,
   Upload,
   CheckCheck,
+  Globe,
+  Shield,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +29,7 @@ const cadetNav: NavItem[] = [
   { to: "/my-exams", label: "My Exams", icon: ClipboardList },
   { to: "/results", label: "Results", icon: BookOpen },
   { to: "/practice", label: "AI Practice", icon: Sparkles },
+  { to: "/army-practice", label: "Army Wing Practice", icon: Shield },
   { to: "/analysis", label: "My Performance", icon: BarChart3 },
   
   { to: "/notifications", label: "Notifications", icon: Bell },
@@ -38,13 +41,24 @@ const adminNav: NavItem[] = [
   { to: "/question-bank", label: "Question Bank", icon: FileText },
   { to: "/pdf-import", label: "PDF Generator", icon: Upload },
   { to: "/ai-review", label: "Question Review", icon: CheckCheck },
+  { to: "/content-sources", label: "Content Sources", icon: Globe },
+  { to: "/practice-review", label: "Practice Bank", icon: Shield },
   { to: "/cadets", label: "Cadets", icon: Users },
   { to: "/geo-activity", label: "Geo Activity", icon: MapPin },
   { to: "/notifications", label: "Notifications", icon: Bell },
 ];
 
-const staffOnlyPrefixes = ["/exams", "/question-bank", "/pdf-import", "/ai-review", "/cadets", "/geo-activity"];
-const cadetOnlyPrefixes = ["/my-exams", "/exam", "/results", "/practice", "/analysis"];
+const staffOnlyPrefixes = [
+  "/exams",
+  "/question-bank",
+  "/pdf-import",
+  "/ai-review",
+  "/cadets",
+  "/geo-activity",
+  "/content-sources",
+  "/practice-review",
+];
+const cadetOnlyPrefixes = ["/my-exams", "/exam", "/results", "/practice", "/analysis", "/army-practice"];
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { isAdmin, isCadet, profile, roles, loading, error, roleResolved, user } = useAuth();
