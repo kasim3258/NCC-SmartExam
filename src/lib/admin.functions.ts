@@ -90,11 +90,7 @@ export const assignExam = createServerFn({ method: "POST" })
     }
 
     if (toInsert.length === 0) {
-      throw new Error(
-        skipped.length
-          ? `Nothing was assigned. ${skipped.map((s) => `${s.name} ${s.reason}`).join("; ")}.`
-          : "Nothing was assigned.",
-      );
+      return { success: true as const, assigned: 0, assignments: [], skipped };
     }
 
     const { data: inserted, error } = await supabaseAdmin
