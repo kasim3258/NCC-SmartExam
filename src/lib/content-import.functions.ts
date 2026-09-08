@@ -949,7 +949,7 @@ export const startArmyPractice = createServerFn({ method: "POST" })
       )
       .eq("wing", "ARMY")
       .eq("status", "APPROVED")
-      .in("certificate_level", allowed)
+      .in("certificate_level", allowed as never[])
       .limit(400);
 
     if (data.subjectId) q = q.eq("subject_id", data.subjectId);
