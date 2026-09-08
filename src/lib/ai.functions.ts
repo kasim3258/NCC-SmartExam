@@ -100,15 +100,15 @@ export const createPdfDocument = createServerFn({ method: "POST" })
     return { pdfId: row.id as string };
   });
 
-/** Analyse one chunk of pages: detect sections, topics, concepts and existing questions. */
-export const analyzePdfChunk = createServerFn({ method: "POST" })
+/**
+ * Read a batch of page previews and work out which real subjects the document
+ * contains. Subjects are merged by name across batches, so page ranges grow as
+ * the whole document is read.
+ */
+export const detectSubjects = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      pdfId: string;
-      examId: string;
-      pages: { page: number; text: string }[];
-    }) =>
+    (d: { pdfId: string; examId: string; pages: { page: number; text: string }[] }) =>
       z
         .object({
           pdfId: z.string().uuid(),
@@ -116,7 +116,7 @@ export const analyzePdfChunk = createServerFn({ method: "POST" })
           pages: z
             .array(z.object({ page: z.number().int().positive(), text: z.string() }))
             .min(1)
-            .max(12),
+            .max(60),
         })
         .parse(d),
   )
@@ -124,147 +124,92 @@ export const analyzePdfChunk = createServerFn({ method: "POST" })
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    await supabaseAdmin
-      .from("pdf_documents")
-      .update({ status: "ANALYZING" })
-      .eq("id", data.pdfId);
+    await supabaseAdmin.from("pdf_documents").update({ status: "ANALYZING" }).eq("id", data.pdfId);
+
+    const { data: known } = await supabaseAdmin
+      .from("subjects")
+      .select("id, name, topics, start_page, end_page, subject_order")
+      .eq("exam_id", data.examId);
 
     const body = data.pages
-      .map((p) => `--- PAGE ${p.page} ---\n${p.text.slice(0, 6000)}`)
+      .map((p) => `--- PAGE ${p.page} ---\n${p.text.slice(0, 1800)}`)
       .join("\n\n");
 
     const raw = await callAI(
-      `You analyse NCC study material and question papers. Reply with STRICT JSON only, no prose.
-Schema:
-{
- "sections":[{"name":string,"summary":string,"topics":string[],"start_page":number,"end_page":number}],
- "concepts":[{"concept":string,"occurrences":number,"pages":number[],"sections":string[]}],
- "existing_questions":[{"question":string,"a":string,"b":string,"c":string,"d":string,"correct":"A"|"B"|"C"|"D","topic":string,"difficulty":"Easy"|"Medium"|"Hard","explanation":string,"page":number,"section":string}]
-}
-Only include existing_questions that are literally printed in the material (already-asked questions). If an option list is missing, omit that question. Keep section names short and syllabus-like.`,
-      body,
+      `You are cataloguing NCC study material. Identify the real SUBJECTS this material teaches — the syllabus subjects themselves (for example "Drill", "Weapon Training", "Map Reading", "Field Craft & Battle Craft", "Disaster Management", "National Integration & Awareness", "Personality Development & Leadership", "Health & Hygiene", "Adventure Training", "Social Service & Community Development", "Armed Forces", "Obstacle Training") — not chapter numbers, headers, footers or page furniture.
+Reply with STRICT JSON only, no prose:
+{"subjects":[{"name":string,"description":string,"topics":string[],"start_page":number,"end_page":number,"confidence":number}]}
+Rules: use the subject's proper syllabus name in Title Case; merge variants of the same subject into one entry; topics are the distinct teaching points found for that subject; start_page/end_page are the real printed page numbers shown above; confidence is 0-1. Return an empty array if these pages are only a cover, index or blank.`,
+      `Subjects already recorded for this document (reuse the exact same name when the pages continue one of them): ${JSON.stringify(
+        (known ?? []).map((s: any) => s.name),
+      )}
+
+${body}`,
     );
 
-    const parsed = parseJson<{
-      sections?: any[];
-      concepts?: any[];
-      existing_questions?: any[];
-    }>(raw, {});
+    const parsed = parseJson<{ subjects?: any[] }>(raw, {});
+    const byName = new Map<string, any>((known ?? []).map((s: any) => [norm(s.name), s]));
+    let order = (known ?? []).reduce((m: number, s: any) => Math.max(m, s.subject_order ?? 0), 0);
 
-    /* sections ---------------------------------------------------- */
-    const { data: existingSections } = await supabaseAdmin
-      .from("exam_sections")
-      .select("id, section_name, section_order")
-      .eq("exam_id", data.examId);
+    const touched: { id: string; name: string; created: boolean }[] = [];
 
-    const byName = new Map<string, string>(
-      (existingSections ?? []).map((s: any) => [norm(s.section_name), s.id as string]),
-    );
-    let order = (existingSections ?? []).reduce(
-      (m: number, s: any) => Math.max(m, s.section_order ?? 0),
-      0,
-    );
-
-    const createdSections: { id: string; name: string }[] = [];
-    for (const s of parsed.sections ?? []) {
+    for (const s of parsed.subjects ?? []) {
       const name = String(s?.name ?? "").trim();
-      if (!name) continue;
+      if (!name || name.length > 120) continue;
       const key = norm(name);
-      if (byName.has(key)) {
-        createdSections.push({ id: byName.get(key)!, name });
+      const topics = (Array.isArray(s?.topics) ? s.topics : [])
+        .map((t: any) => String(t).trim())
+        .filter(Boolean);
+      const start = Number.isFinite(s?.start_page) ? Number(s.start_page) : null;
+      const end = Number.isFinite(s?.end_page) ? Number(s.end_page) : start;
+      const confidence = Number.isFinite(s?.confidence) ? Math.min(1, Math.max(0, s.confidence)) : 0.5;
+
+      const existing = byName.get(key);
+      if (existing) {
+        const mergedTopics = Array.from(
+          new Set([...(existing.topics ?? []).map(String), ...topics]),
+        ).slice(0, 60);
+        const newStart =
+          start === null ? existing.start_page : Math.min(existing.start_page ?? start, start);
+        const newEnd = end === null ? existing.end_page : Math.max(existing.end_page ?? end, end);
+        await supabaseAdmin
+          .from("subjects")
+          .update({
+            topics: mergedTopics,
+            start_page: newStart,
+            end_page: newEnd,
+            page_count: newStart && newEnd ? newEnd - newStart + 1 : 0,
+          })
+          .eq("id", existing.id);
+        existing.topics = mergedTopics;
+        existing.start_page = newStart;
+        existing.end_page = newEnd;
+        touched.push({ id: existing.id, name: existing.name, created: false });
         continue;
       }
+
       order += 1;
       const { data: row } = await supabaseAdmin
-        .from("exam_sections")
+        .from("subjects")
         .insert({
           exam_id: data.examId,
           pdf_document_id: data.pdfId,
-          section_name: name,
-          section_order: order,
-          summary: s?.summary ?? null,
-          topics: Array.isArray(s?.topics) ? s.topics : [],
-          source_start_page: Number.isFinite(s?.start_page) ? s.start_page : null,
-          source_end_page: Number.isFinite(s?.end_page) ? s.end_page : null,
+          name,
+          description: s?.description ? String(s.description).slice(0, 600) : null,
+          topics,
+          start_page: start,
+          end_page: end,
+          page_count: start && end ? end - start + 1 : 0,
+          confidence,
+          subject_order: order,
+          created_by: context.userId,
         })
-        .select("id")
+        .select("id, name, topics, start_page, end_page, subject_order")
         .single();
       if (row) {
-        byName.set(key, row.id as string);
-        createdSections.push({ id: row.id as string, name });
+        byName.set(key, row);
+        touched.push({ id: row.id as string, name, created: true });
       }
-    }
-
-    /* concepts ---------------------------------------------------- */
-    for (const c of parsed.concepts ?? []) {
-      const concept = String(c?.concept ?? "").trim();
-      if (!concept) continue;
-      const count = Number(c?.occurrences) || 1;
-      const priority =
-        count >= 6 ? "VERY_HIGH" : count >= 4 ? "HIGH" : count >= 2 ? "NORMAL" : "LOW";
-      const { data: existing } = await supabaseAdmin
-        .from("high_frequency_concepts")
-        .select("id, occurrence_count")
-        .eq("exam_id", data.examId)
-        .ilike("concept", concept)
-        .maybeSingle();
-      if (existing) {
-        const total = (existing.occurrence_count ?? 0) + count;
-        await supabaseAdmin
-          .from("high_frequency_concepts")
-          .update({
-            occurrence_count: total,
-            priority:
-              total >= 6 ? "VERY_HIGH" : total >= 4 ? "HIGH" : total >= 2 ? "NORMAL" : "LOW",
-          })
-          .eq("id", existing.id);
-      } else {
-        await supabaseAdmin.from("high_frequency_concepts").insert({
-          exam_id: data.examId,
-          pdf_document_id: data.pdfId,
-          concept,
-          occurrence_count: count,
-          pages: Array.isArray(c?.pages) ? c.pages : [],
-          sections: Array.isArray(c?.sections) ? c.sections : [],
-          priority,
-        });
-      }
-    }
-
-    /* existing questions ------------------------------------------ */
-    const { data: known } = await supabaseAdmin
-      .from("questions")
-      .select("question_text")
-      .eq("exam_id", data.examId);
-    const knownSet = new Set((known ?? []).map((q: any) => norm(q.question_text)));
-
-    let inserted = 0;
-    for (const q of parsed.existing_questions ?? []) {
-      const text = String(q?.question ?? "").trim();
-      if (!text || !q?.a || !q?.b || !q?.c || !q?.d) continue;
-      if (!["A", "B", "C", "D"].includes(q?.correct)) continue;
-      if (knownSet.has(norm(text))) continue;
-      knownSet.add(norm(text));
-      const sectionName = String(q?.section ?? "").trim();
-      await supabaseAdmin.from("questions").insert({
-        exam_id: data.examId,
-        section_id: byName.get(norm(sectionName)) ?? null,
-        question_text: text,
-        option_a: String(q.a),
-        option_b: String(q.b),
-        option_c: String(q.c),
-        option_d: String(q.d),
-        correct_answer: q.correct,
-        topic: q?.topic ?? null,
-        difficulty: ["Easy", "Medium", "Hard"].includes(q?.difficulty) ? q.difficulty : "Medium",
-        explanation: q?.explanation ?? null,
-        source_page: Number.isFinite(q?.page) ? q.page : null,
-        source_section: sectionName || null,
-        source_type: "PDF_EXISTING_QUESTION",
-        review_status: "PENDING",
-        created_by: context.userId,
-      });
-      inserted += 1;
     }
 
     const { data: doc } = await supabaseAdmin
@@ -277,42 +222,75 @@ Only include existing_questions that are literally printed in the material (alre
       .update({ processed_pages: (doc?.processed_pages ?? 0) + data.pages.length })
       .eq("id", data.pdfId);
 
-    return {
-      sections: createdSections,
-      conceptCount: (parsed.concepts ?? []).length,
-      existingQuestions: inserted,
-    };
+    return { subjects: touched };
   });
 
-/** Generate new AI questions for one section of an exam. */
-export const generateSectionQuestions = createServerFn({ method: "POST" })
+/** Every subject recorded for one exam, newest document first. */
+export const listSubjects = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { examId: string; sectionId: string; count: number }) =>
-    z
-      .object({
-        examId: z.string().uuid(),
-        sectionId: z.string().uuid(),
-        count: z.number().int().min(1).max(30),
-      })
-      .parse(d),
+  .inputValidator((d: { examId: string }) => z.object({ examId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: subjects } = await supabaseAdmin
+      .from("subjects")
+      .select("id, name, description, topics, start_page, end_page, page_count, confidence, approved")
+      .eq("exam_id", data.examId)
+      .order("subject_order", { ascending: true });
+
+    const { data: counts } = await supabaseAdmin
+      .from("questions")
+      .select("subject_id")
+      .eq("exam_id", data.examId)
+      .not("subject_id", "is", null);
+
+    const tally = new Map<string, number>();
+    for (const q of counts ?? []) {
+      const k = (q as any).subject_id as string;
+      tally.set(k, (tally.get(k) ?? 0) + 1);
+    }
+
+    return (subjects ?? []).map((s: any) => ({
+      ...s,
+      topics: (s.topics ?? []) as string[],
+      question_count: tally.get(s.id) ?? 0,
+    }));
+  });
+
+/**
+ * Read the pages that belong to one subject: capture the questions already
+ * printed there and write new ones, all filed under that subject and topic.
+ */
+export const generateSubjectQuestions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      examId: string;
+      subjectId: string;
+      count: number;
+      pages: { page: number; text: string }[];
+    }) =>
+      z
+        .object({
+          examId: z.string().uuid(),
+          subjectId: z.string().uuid(),
+          count: z.number().int().min(1).max(30),
+          pages: z
+            .array(z.object({ page: z.number().int().positive(), text: z.string() }))
+            .max(14),
+        })
+        .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: section } = await supabaseAdmin
-      .from("exam_sections")
-      .select("section_name, summary, topics, source_start_page, source_end_page")
-      .eq("id", data.sectionId)
+    const { data: subject } = await supabaseAdmin
+      .from("subjects")
+      .select("id, name, description, topics, start_page, pdf_document_id")
+      .eq("id", data.subjectId)
       .single();
-    if (!section) throw new Error("Section not found.");
-
-    const { data: concepts } = await supabaseAdmin
-      .from("high_frequency_concepts")
-      .select("concept, priority, occurrence_count")
-      .eq("exam_id", data.examId)
-      .order("occurrence_count", { ascending: false })
-      .limit(20);
+    if (!subject) throw new Error("Subject not found.");
 
     const { data: known } = await supabaseAdmin
       .from("questions")
@@ -320,59 +298,113 @@ export const generateSectionQuestions = createServerFn({ method: "POST" })
       .eq("exam_id", data.examId);
     const knownSet = new Set((known ?? []).map((q: any) => norm(q.question_text)));
 
+    const material = data.pages
+      .map((p) => `--- PAGE ${p.page} ---\n${p.text.slice(0, 5000)}`)
+      .join("\n\n");
+
     const raw = await callAI(
-      `You write NCC multiple-choice exam questions. Reply with STRICT JSON array only, no prose.
-Each item: {"question":string,"a":string,"b":string,"c":string,"d":string,"correct":"A"|"B"|"C"|"D","topic":string,"difficulty":"Easy"|"Medium"|"Hard","explanation":string,"priority":"VERY_HIGH"|"HIGH"|"NORMAL"|"LOW"}
-Rules: exactly one correct option, plausible distractors, factually accurate NCC syllabus content, no duplicates of the listed existing questions, mix of difficulties, concise explanation for each.`,
-      `Section: ${section.section_name}
-Summary: ${section.summary ?? "n/a"}
-Topics: ${JSON.stringify(section.topics ?? [])}
-High-frequency concepts (prioritise these): ${JSON.stringify(concepts ?? [])}
+      `You prepare NCC examination questions for ONE subject only. Reply with STRICT JSON only, no prose:
+{"printed":[{"question":string,"a":string,"b":string,"c":string,"d":string,"correct":"A"|"B"|"C"|"D","topic":string,"difficulty":"Easy"|"Medium"|"Hard","explanation":string,"page":number}],
+ "generated":[{"question":string,"a":string,"b":string,"c":string,"d":string,"correct":"A"|"B"|"C"|"D","topic":string,"difficulty":"Easy"|"Medium"|"Hard","explanation":string,"priority":"VERY_HIGH"|"HIGH"|"NORMAL"|"LOW"}],
+ "concepts":[{"concept":string,"occurrences":number,"pages":number[]}]}
+"printed" = only questions literally printed in the material with all four options; omit any without a full option list. "generated" = new questions you write from this material. Every question must belong to this subject, have exactly one correct option, plausible distractors, an accurate answer, a short explanation, and a topic drawn from the subject's topic list where possible. Never duplicate a listed existing question.`,
+      `Subject: ${subject.name}
+Description: ${subject.description ?? "n/a"}
+Topics: ${JSON.stringify(subject.topics ?? [])}
+
 Existing questions to avoid duplicating:
 ${(known ?? []).slice(0, 120).map((q: any) => "- " + q.question_text).join("\n")}
 
-Write ${data.count} new questions.`,
+Write ${data.count} new questions under "generated".
+
+Material:
+${material || "(no page text available — rely on the subject and topics above)"}`,
     );
 
-    const items = parseJson<any[]>(raw, []);
-    const rows: any[] = [];
-    for (const q of Array.isArray(items) ? items : []) {
+    const parsed = parseJson<{ printed?: any[]; generated?: any[]; concepts?: any[] }>(raw, {});
+
+    const build = (q: any, kind: "PDF_EXISTING_QUESTION" | "AI_GENERATED") => {
       const text = String(q?.question ?? "").trim();
-      if (!text || !q?.a || !q?.b || !q?.c || !q?.d) continue;
-      if (!["A", "B", "C", "D"].includes(q?.correct)) continue;
-      if (knownSet.has(norm(text))) continue;
+      if (!text || !q?.a || !q?.b || !q?.c || !q?.d) return null;
+      if (!["A", "B", "C", "D"].includes(q?.correct)) return null;
+      if (knownSet.has(norm(text))) return null;
       knownSet.add(norm(text));
-      rows.push({
+      return {
         exam_id: data.examId,
-        section_id: data.sectionId,
+        subject_id: subject.id,
         question_text: text,
         option_a: String(q.a),
         option_b: String(q.b),
         option_c: String(q.c),
         option_d: String(q.d),
         correct_answer: q.correct,
-        topic: q?.topic ?? null,
+        subject: subject.name,
+        topic: q?.topic ? String(q.topic).slice(0, 120) : null,
         difficulty: ["Easy", "Medium", "Hard"].includes(q?.difficulty) ? q.difficulty : "Medium",
-        explanation: q?.explanation ?? null,
-        source_section: section.section_name,
-        source_page: section.source_start_page ?? null,
-        source_type: "AI_GENERATED",
+        explanation: q?.explanation ? String(q.explanation) : null,
+        source_page: Number.isFinite(q?.page) ? q.page : (subject.start_page ?? null),
+        source_section: subject.name,
+        source_type: kind,
         review_status: "PENDING",
         repetition_priority: ["VERY_HIGH", "HIGH", "NORMAL", "LOW"].includes(q?.priority)
           ? q.priority
           : "NORMAL",
         created_by: context.userId,
-      });
-    }
+      };
+    };
+
+    const printedRows = (parsed.printed ?? [])
+      .map((q) => build(q, "PDF_EXISTING_QUESTION"))
+      .filter(Boolean);
+    const generatedRows = (parsed.generated ?? [])
+      .map((q) => build(q, "AI_GENERATED"))
+      .filter(Boolean);
+    const rows = [...printedRows, ...generatedRows];
 
     if (rows.length) {
-      const { error } = await supabaseAdmin.from("questions").insert(rows);
+      const { error } = await supabaseAdmin.from("questions").insert(rows as any[]);
       if (error) throw new Error(error.message);
     }
 
-    const skipped = (Array.isArray(items) ? items.length : 0) - rows.length;
-    return { generated: rows.length, skippedDuplicates: Math.max(0, skipped) };
+    for (const c of parsed.concepts ?? []) {
+      const concept = String(c?.concept ?? "").trim();
+      if (!concept) continue;
+      const count = Number(c?.occurrences) || 1;
+      const rank = (n: number) =>
+        n >= 6 ? "VERY_HIGH" : n >= 4 ? "HIGH" : n >= 2 ? "NORMAL" : "LOW";
+      const { data: existing } = await supabaseAdmin
+        .from("high_frequency_concepts")
+        .select("id, occurrence_count")
+        .eq("exam_id", data.examId)
+        .ilike("concept", concept)
+        .maybeSingle();
+      if (existing) {
+        const total = (existing.occurrence_count ?? 0) + count;
+        await supabaseAdmin
+          .from("high_frequency_concepts")
+          .update({ occurrence_count: total, priority: rank(total) })
+          .eq("id", existing.id);
+      } else {
+        await supabaseAdmin.from("high_frequency_concepts").insert({
+          exam_id: data.examId,
+          pdf_document_id: subject.pdf_document_id,
+          concept,
+          occurrence_count: count,
+          pages: Array.isArray(c?.pages) ? c.pages : [],
+          sections: [subject.name],
+          priority: rank(count),
+        });
+      }
+    }
+
+    const offered = (parsed.printed ?? []).length + (parsed.generated ?? []).length;
+    return {
+      printed: printedRows.length,
+      generated: generatedRows.length,
+      skippedDuplicates: Math.max(0, offered - rows.length),
+    };
   });
+
 
 /** Mark a PDF import finished (or failed). */
 export const finishPdfDocument = createServerFn({ method: "POST" })
