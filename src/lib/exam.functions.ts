@@ -15,6 +15,81 @@ export type AttemptQuestion = {
   selected_answer: "A" | "B" | "C" | "D" | null;
 };
 
+export type MyAssignment = {
+  id: string;
+  exam_id: string;
+  mandatory: boolean;
+  deadline: string | null;
+  status: "assigned" | "started" | "completed" | "expired";
+  expired: boolean;
+  attempt_id: string | null;
+  exam: {
+    id: string;
+    title: string;
+    description: string | null;
+    cadet_category: string;
+    duration_minutes: number;
+    published: boolean;
+  } | null;
+};
+
+/**
+ * The signed-in cadet's own assignments, always keyed off the authenticated
+ * user id. Exam details come back even when the paper is not published yet, so
+ * an assignment is never silently hidden.
+ */
+export const listMyAssignments = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<MyAssignment[]> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const userId = context.userId;
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("exam_assignments")
+      .select("id, exam_id, mandatory, deadline, status")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    if (!rows || rows.length === 0) return [];
+
+    const examIds = [...new Set(rows.map((r) => r.exam_id))];
+    const [{ data: exams }, { data: attempts }] = await Promise.all([
+      supabaseAdmin
+        .from("exams")
+        .select("id, title, description, cadet_category, duration_minutes, published")
+        .in("id", examIds),
+      supabaseAdmin
+        .from("exam_attempts")
+        .select("id, exam_id, status, submitted_at")
+        .eq("user_id", userId)
+        .in("exam_id", examIds)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const examMap = new Map((exams ?? []).map((e) => [e.id, e]));
+    const attemptMap = new Map<string, { id: string; status: string }>();
+    for (const a of attempts ?? []) if (!attemptMap.has(a.exam_id)) attemptMap.set(a.exam_id, a);
+
+    return rows.map((r) => {
+      const attempt = attemptMap.get(r.exam_id) ?? null;
+      const deadlineDate = r.deadline ? new Date(r.deadline) : null;
+      const deadlineValid = deadlineDate !== null && !Number.isNaN(deadlineDate.getTime());
+      const done = r.status === "completed" || attempt?.status === "completed";
+      const expired = !done && deadlineValid && deadlineDate!.getTime() < Date.now();
+      return {
+        id: r.id,
+        exam_id: r.exam_id,
+        mandatory: r.mandatory,
+        deadline: deadlineValid ? deadlineDate!.toISOString() : null,
+        status: (done ? "completed" : r.status) as MyAssignment["status"],
+        expired,
+        attempt_id: attempt?.id ?? null,
+        exam: examMap.get(r.exam_id) ?? null,
+      };
+    });
+  });
+
+
 /** Starts (or resumes) an attempt and returns the paper without any answer keys. */
 export const startAttempt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

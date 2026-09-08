@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { assignExam, listMembers } from "@/lib/admin.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { assignExam, listExamAssignments, listMembers } from "@/lib/admin.functions";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -91,17 +93,16 @@ function ManageExam() {
     enabled: isAdmin,
   });
 
+  const fetchAssignments = useServerFn(listExamAssignments);
   const assignments = useQuery({
     queryKey: ["exam-assignments", examId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("exam_assignments")
-        .select("id, user_id, mandatory, deadline, status")
-        .eq("exam_id", examId);
-      if (error) throw error;
-      return data;
-    },
+    enabled: isAdmin,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    queryFn: () => fetchAssignments({ data: { examId } }),
   });
+
 
   const [sectionName, setSectionName] = useState("");
   const addSection = useMutation({
@@ -183,11 +184,19 @@ function ManageExam() {
         },
       }),
     onSuccess: (r) => {
-      toast.success(`Assigned to ${r.assigned} cadet(s).`);
+      toast.success(`Exam assigned successfully to ${r.assigned} cadet(s).`);
+      if (r.skipped.length) {
+        toast.warning(r.skipped.map((s) => `${s.name} ${s.reason}`).join("; "));
+      }
       setSelected([]);
       qc.invalidateQueries({ queryKey: ["exam-assignments", examId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      // eslint-disable-next-line no-console
+      console.error("[assign] failed", e);
+      toast.error(e.message || "Unable to assign exam. Please try again.");
+    },
+
   });
 
   if (!isAdmin)
@@ -455,7 +464,48 @@ function ManageExam() {
               </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Existing assignments</CardTitle>
+              <CardDescription>
+                Saved records for this exam, straight from the database.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {assignments.isLoading ? (
+                <Skeleton className="h-16" />
+              ) : (assignments.data ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  This exam has not been assigned to anyone yet.
+                </p>
+              ) : (
+                (assignments.data ?? []).map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-medium">{a.cadet?.name || a.cadet?.email || a.user_id}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {a.cadet?.cadet_category ?? "No category"} ·{" "}
+                        {a.deadline
+                          ? `due ${new Date(a.deadline).toLocaleString()}`
+                          : "no deadline"}{" "}
+                        · assigned {new Date(a.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {a.mandatory && <Badge variant="destructive">Mandatory</Badge>}
+                      <Badge variant="secondary">{a.status}</Badge>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
+
       </Tabs>
     </div>
   );
