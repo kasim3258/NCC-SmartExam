@@ -96,6 +96,10 @@ function Notifications() {
                   <span className="ml-auto text-xs text-muted-foreground">
                     {new Date(n.created_at).toLocaleString()}
                   </span>
+                  <DeleteButton
+                    label="this notification"
+                    onConfirm={() => remove.mutate(n.id)}
+                  />
                 </div>
                 <p className="text-sm text-muted-foreground">{n.message}</p>
               </CardContent>
