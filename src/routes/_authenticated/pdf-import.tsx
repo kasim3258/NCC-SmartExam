@@ -243,7 +243,7 @@ function PdfImport() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">PDF question generator</h1>
         <p className="text-sm text-muted-foreground">
-          Upload study material or a past paper. Sections, repeated concepts and questions are detected
+          Upload study material or a past paper. The subjects it teaches, repeated concepts and questions are detected
           automatically, then wait for your approval.
         </p>
       </div>
@@ -278,7 +278,7 @@ function PdfImport() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="count">New questions per section</Label>
+            <Label htmlFor="count">New questions per subject</Label>
             <Input
               id="count"
               type="number"
