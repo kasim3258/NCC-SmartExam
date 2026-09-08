@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { listMyAssignments } from "@/lib/exam.functions";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,18 +26,16 @@ export const Route = createFileRoute("/_authenticated/my-exams")({
 });
 
 function MyExams() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["my-assignments"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("exam_assignments")
-        .select(
-          "id, mandatory, deadline, status, exam_id, exams(id, title, description, duration_minutes, published)",
-        )
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+  const { user } = useAuth();
+  const fetchMine = useServerFn(listMyAssignments);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["my-assignments", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchMine(),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   return (
@@ -47,45 +47,61 @@ function MyExams() {
 
       {isLoading ? (
         <Skeleton className="h-32" />
+      ) : error ? (
+        <Card>
+          <CardContent className="py-10 text-center text-destructive">
+            Your assigned exams could not be loaded. Please refresh the page.
+          </CardContent>
+        </Card>
       ) : (data?.length ?? 0) === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            No exams have been assigned to you yet.
+            No exams assigned yet.
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {data!.map((a) => {
-            const overdue = a.deadline ? new Date(a.deadline) < new Date() : false;
             const done = a.status === "completed";
+            const started = a.status === "started";
             return (
               <Card key={a.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <CardTitle className="text-base">{a.exams?.title}</CardTitle>
-                      <CardDescription>{a.exams?.description}</CardDescription>
+                      <CardTitle className="text-base">
+                        {a.exam?.title ?? "Exam unavailable"}
+                      </CardTitle>
+                      <CardDescription>{a.exam?.description}</CardDescription>
                     </div>
-                    {a.mandatory && <Badge variant="destructive">Mandatory</Badge>}
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      {a.mandatory && <Badge variant="destructive">Mandatory</Badge>}
+                      {a.exam?.cadet_category && (
+                        <Badge variant="outline">{a.exam.cadet_category}</Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-xs text-muted-foreground">
-                    {a.exams?.duration_minutes} minutes
-                    {a.deadline ? ` · due ${new Date(a.deadline).toLocaleString()}` : ""}
+                    {a.exam ? `${a.exam.duration_minutes} minutes` : "—"}
+                    {a.deadline ? ` · due ${new Date(a.deadline).toLocaleString()}` : " · no deadline"}
                   </p>
                   {done ? (
-                    <Button asChild size="sm" variant="outline">
-                      <Link to="/results">View result</Link>
-                    </Button>
-                  ) : overdue ? (
-                    <Badge variant="secondary">Deadline passed</Badge>
-                  ) : !a.exams?.published ? (
-                    <Badge variant="secondary">Not open yet</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">Completed</Badge>
+                      <Button asChild size="sm" variant="outline">
+                        <Link to="/results">View result</Link>
+                      </Button>
+                    </div>
+                  ) : a.expired ? (
+                    <Badge variant="secondary">Expired</Badge>
+                  ) : !a.exam?.published ? (
+                    <Badge variant="secondary">Assigned — waiting for publication</Badge>
                   ) : (
                     <Button asChild size="sm">
                       <Link to="/exam/$examId" params={{ examId: a.exam_id }}>
-                        {a.status === "started" ? "Resume" : "Start exam"}
+                        {started ? "Continue exam" : "Start exam"}
                       </Link>
                     </Button>
                   )}
