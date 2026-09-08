@@ -174,8 +174,11 @@ function ManageExam() {
   const [deadline, setDeadline] = useState("");
 
   const assign = useMutation({
-    mutationFn: () =>
-      assignExam({
+    mutationFn: async () => {
+      if (deadline && new Date(deadline).getTime() <= Date.now()) {
+        throw new Error("The deadline is in the past. Choose a future date and time.");
+      }
+      return assignExam({
         data: {
           examId,
           userIds: selected,
