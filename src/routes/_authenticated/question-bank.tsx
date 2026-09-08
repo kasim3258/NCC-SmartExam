@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteQuestion } from "@/lib/admin.functions";
+import { DeleteButton } from "@/components/DeleteButton";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,6 +74,15 @@ function QuestionBank() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["question-bank"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: (questionId: string) => deleteQuestion({ data: { questionId } }),
+    onSuccess: () => {
+      toast.success("Question deleted.");
+      qc.invalidateQueries({ queryKey: ["question-bank"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -203,6 +214,12 @@ function QuestionBank() {
                       Reject
                     </Button>
                   )}
+                  <DeleteButton
+                    label="this question"
+                    size="sm"
+                    buttonLabel="Delete"
+                    onConfirm={() => remove.mutate(q.id)}
+                  />
                 </div>
               </CardContent>
             </Card>

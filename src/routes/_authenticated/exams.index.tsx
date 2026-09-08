@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteExam } from "@/lib/admin.functions";
+import { DeleteButton } from "@/components/DeleteButton";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,6 +83,15 @@ function ExamsPage() {
       toast.success("Exam created.");
       setOpen(false);
       setForm({ ...form, title: "", description: "" });
+      qc.invalidateQueries({ queryKey: ["exams"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeExam = useMutation({
+    mutationFn: (examId: string) => deleteExam({ data: { examId } }),
+    onSuccess: () => {
+      toast.success("Exam deleted.");
       qc.invalidateQueries({ queryKey: ["exams"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -233,11 +244,18 @@ function ExamsPage() {
                     />
                     {exam.published ? "Published" : "Draft"}
                   </label>
-                  <Button asChild size="sm" variant="outline">
-                    <Link to="/exams/$examId" params={{ examId: exam.id }}>
-                      Manage
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/exams/$examId" params={{ examId: exam.id }}>
+                        Manage
+                      </Link>
+                    </Button>
+                    <DeleteButton
+                      label={exam.title}
+                      description="The paper, its sections, questions, assignments and every cadet result for it will be removed permanently."
+                      onConfirm={() => removeExam.mutate(exam.id)}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
