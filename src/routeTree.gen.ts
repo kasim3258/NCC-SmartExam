@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAiReviewRouteImport } from './routes/_authenticated/ai-review'
 import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
+import { Route as AuthenticatedArmyPracticeRouteImport } from './routes/_authenticated/army-practice'
 import { Route as AuthenticatedCadetsRouteImport } from './routes/_authenticated/cadets'
 import { Route as AuthenticatedContentSourcesRouteImport } from './routes/_authenticated/content-sources'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -60,6 +61,12 @@ const AuthenticatedAnalysisRoute = AuthenticatedAnalysisRouteImport.update({
   path: '/analysis',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedArmyPracticeRoute =
+  AuthenticatedArmyPracticeRouteImport.update({
+    id: '/army-practice',
+    path: '/army-practice',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCadetsRoute = AuthenticatedCadetsRouteImport.update({
   id: '/cadets',
   path: '/cadets',
@@ -150,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
+  '/army-practice': typeof AuthenticatedArmyPracticeRoute
   '/cadets': typeof AuthenticatedCadetsRoute
   '/content-sources': typeof AuthenticatedContentSourcesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -172,6 +180,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
+  '/army-practice': typeof AuthenticatedArmyPracticeRoute
   '/cadets': typeof AuthenticatedCadetsRoute
   '/content-sources': typeof AuthenticatedContentSourcesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -196,6 +205,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/ai-review': typeof AuthenticatedAiReviewRoute
   '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
+  '/_authenticated/army-practice': typeof AuthenticatedArmyPracticeRoute
   '/_authenticated/cadets': typeof AuthenticatedCadetsRoute
   '/_authenticated/content-sources': typeof AuthenticatedContentSourcesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/ai-review'
     | '/analysis'
+    | '/army-practice'
     | '/cadets'
     | '/content-sources'
     | '/dashboard'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/ai-review'
     | '/analysis'
+    | '/army-practice'
     | '/cadets'
     | '/content-sources'
     | '/dashboard'
@@ -265,6 +277,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/ai-review'
     | '/_authenticated/analysis'
+    | '/_authenticated/army-practice'
     | '/_authenticated/cadets'
     | '/_authenticated/content-sources'
     | '/_authenticated/dashboard'
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/analysis'
       fullPath: '/analysis'
       preLoaderRoute: typeof AuthenticatedAnalysisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/army-practice': {
+      id: '/_authenticated/army-practice'
+      path: '/army-practice'
+      fullPath: '/army-practice'
+      preLoaderRoute: typeof AuthenticatedArmyPracticeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadets': {
@@ -444,6 +464,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReviewRoute: typeof AuthenticatedAiReviewRoute
   AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
+  AuthenticatedArmyPracticeRoute: typeof AuthenticatedArmyPracticeRoute
   AuthenticatedCadetsRoute: typeof AuthenticatedCadetsRoute
   AuthenticatedContentSourcesRoute: typeof AuthenticatedContentSourcesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -464,6 +485,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReviewRoute: AuthenticatedAiReviewRoute,
   AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
+  AuthenticatedArmyPracticeRoute: AuthenticatedArmyPracticeRoute,
   AuthenticatedCadetsRoute: AuthenticatedCadetsRoute,
   AuthenticatedContentSourcesRoute: AuthenticatedContentSourcesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
