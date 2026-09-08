@@ -652,8 +652,8 @@ export const listPracticeQuestions = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(300);
 
-    if (data.status) q = q.eq("status", data.status);
-    if (data.certificate) q = q.eq("certificate_level", data.certificate);
+    if (data.status) q = q.eq("status", data.status as never);
+    if (data.certificate) q = q.eq("certificate_level", data.certificate as never);
     if (data.subjectId) q = q.eq("subject_id", data.subjectId);
     if (data.onlyRepeated) q = q.gt("repetition_count", 1);
     if (data.search) q = q.ilike("question_text", `%${data.search}%`);
