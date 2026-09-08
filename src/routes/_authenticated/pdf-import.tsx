@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,8 @@ import {
   generateSubjectQuestions,
   finishPdfDocument,
 } from "@/lib/ai.functions";
+import { deletePdfDocument, deleteSubject } from "@/lib/admin.functions";
+import { DeleteButton } from "@/components/DeleteButton";
 
 
 export const Route = createFileRoute("/_authenticated/pdf-import")({
@@ -104,6 +106,24 @@ function PdfImport() {
   });
 
 
+
+  const removeSubject = useMutation({
+    mutationFn: (subjectId: string) => deleteSubject({ data: { subjectId, withQuestions: true } }),
+    onSuccess: () => {
+      toast.success("Subject and its questions deleted.");
+      void refetchSubjects();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeDoc = useMutation({
+    mutationFn: (documentId: string) => deletePdfDocument({ data: { documentId } }),
+    onSuccess: () => {
+      toast.success("Document deleted.");
+      void refetchDocs();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const say = (text: string, kind: LogLine["kind"] = "info") =>
     setLog((l) => [...l, { text, kind }]);
@@ -311,6 +331,11 @@ function PdfImport() {
                       pages {s.start_page ?? "?"}–{s.end_page ?? "?"}
                     </Badge>
                     <Badge>{s.question_count} question(s)</Badge>
+                    <DeleteButton
+                      label={s.name}
+                      description="This subject and every question generated for it will be removed permanently."
+                      onConfirm={() => removeSubject.mutate(s.id)}
+                    />
                   </div>
                 </div>
                 {s.description && (
@@ -372,7 +397,14 @@ function PdfImport() {
                   {d.exams?.title ?? "—"} · {d.processed_pages}/{d.total_pages} pages
                 </p>
               </div>
-              <Badge variant={d.status === "FAILED" ? "destructive" : "secondary"}>{d.status}</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant={d.status === "FAILED" ? "destructive" : "secondary"}>{d.status}</Badge>
+                <DeleteButton
+                  label={d.file_name}
+                  description="The import record and its detected concepts are removed. Questions already saved are kept."
+                  onConfirm={() => removeDoc.mutate(d.id)}
+                />
+              </div>
             </div>
           ))}
         </CardContent>
