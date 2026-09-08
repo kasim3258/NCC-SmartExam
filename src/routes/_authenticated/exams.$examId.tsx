@@ -91,17 +91,16 @@ function ManageExam() {
     enabled: isAdmin,
   });
 
+  const fetchAssignments = useServerFn(listExamAssignments);
   const assignments = useQuery({
     queryKey: ["exam-assignments", examId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("exam_assignments")
-        .select("id, user_id, mandatory, deadline, status")
-        .eq("exam_id", examId);
-      if (error) throw error;
-      return data;
-    },
+    enabled: isAdmin,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    queryFn: () => fetchAssignments({ data: { examId } }),
   });
+
 
   const [sectionName, setSectionName] = useState("");
   const addSection = useMutation({
