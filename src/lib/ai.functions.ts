@@ -59,6 +59,17 @@ function parseJson<T>(raw: string, fallback: T): T {
         /* ignore */
       }
     }
+    // Truncated array: keep every complete object and close the array.
+    if (slice.startsWith("[")) {
+      const lastObject = slice.lastIndexOf("}");
+      if (lastObject > 0) {
+        try {
+          return JSON.parse(`${slice.slice(0, lastObject + 1)}]`) as T;
+        } catch {
+          /* ignore */
+        }
+      }
+    }
     return fallback;
   }
 }
