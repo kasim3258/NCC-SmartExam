@@ -39,6 +39,8 @@ const adminNav: NavItem[] = [
   { to: "/question-bank", label: "Question Bank", icon: FileText },
   { to: "/pdf-import", label: "PDF Generator", icon: Upload },
   { to: "/ai-review", label: "Question Review", icon: CheckCheck },
+  { to: "/content-sources", label: "Content Sources", icon: Globe },
+  { to: "/practice-review", label: "Practice Bank", icon: Shield },
   { to: "/cadets", label: "Cadets", icon: Users },
   { to: "/geo-activity", label: "Geo Activity", icon: MapPin },
   { to: "/notifications", label: "Notifications", icon: Bell },
