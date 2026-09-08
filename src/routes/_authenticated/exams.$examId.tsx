@@ -188,7 +188,11 @@ function ManageExam() {
       });
     },
     onSuccess: (r) => {
-      toast.success(`Exam assigned successfully to ${r.assigned} cadet(s).`);
+      if (r.assigned > 0) {
+        toast.success(`Exam assigned successfully to ${r.assigned} cadet(s).`);
+      } else {
+        toast.info("No new assignments — those cadets already have this exam.");
+      }
       if (r.skipped.length) {
         toast.warning(r.skipped.map((s) => `${s.name} ${s.reason}`).join("; "));
       }
