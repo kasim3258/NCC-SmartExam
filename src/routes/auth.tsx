@@ -183,7 +183,12 @@ function AuthPage() {
     if (data.session) {
       router.navigate({ to: "/dashboard" });
     } else {
-      toast.success("Account created. Check your email to confirm, then sign in.");
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        toast.success("Account created. You can sign in now.");
+        return;
+      }
+      router.navigate({ to: "/dashboard" });
     }
   };
 
