@@ -48,8 +48,17 @@ const adminNav: NavItem[] = [
   { to: "/notifications", label: "Notifications", icon: Bell },
 ];
 
-const staffOnlyPrefixes = ["/exams", "/question-bank", "/pdf-import", "/ai-review", "/cadets", "/geo-activity"];
-const cadetOnlyPrefixes = ["/my-exams", "/exam", "/results", "/practice", "/analysis"];
+const staffOnlyPrefixes = [
+  "/exams",
+  "/question-bank",
+  "/pdf-import",
+  "/ai-review",
+  "/cadets",
+  "/geo-activity",
+  "/content-sources",
+  "/practice-review",
+];
+const cadetOnlyPrefixes = ["/my-exams", "/exam", "/results", "/practice", "/analysis", "/army-practice"];
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { isAdmin, isCadet, profile, roles, loading, error, roleResolved, user } = useAuth();
