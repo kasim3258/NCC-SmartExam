@@ -277,7 +277,15 @@ function AuthPage() {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in…" : "Sign in"}
                   </Button>
+                  <button
+                    type="button"
+                    className="w-full text-center text-xs text-primary hover:underline"
+                    onClick={() => setForgot(true)}
+                  >
+                    Forgot your password?
+                  </button>
                 </form>
+                )}
               </TabsContent>
 
               <TabsContent value="signup">
