@@ -418,6 +418,9 @@ function ManageExam() {
                   <Input
                     id="dl"
                     type="datetime-local"
+                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+                      .toISOString()
+                      .slice(0, 16)}
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
                   />
