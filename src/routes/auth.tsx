@@ -108,7 +108,7 @@ function AuthPage() {
       setLoading(false);
       toast.error(
         error?.message?.toLowerCase().includes("invalid login")
-          ? "Incorrect email or password."
+          ? "This password was not accepted. If you joined with Google, use Continue with Google above, or reset your password."
           : (error?.message ?? "Sign in failed."),
       );
       return;
@@ -132,7 +132,7 @@ function AuthPage() {
     if (error) {
       toast.error(
         error.message.toLowerCase().includes("invalid login")
-          ? "Incorrect email or password."
+          ? "This password was not accepted. If you joined with Google, use Continue with Google above, or reset your password."
           : error.message,
       );
       return;
@@ -153,7 +153,11 @@ function AuthPage() {
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(
+        error.message.toLowerCase().includes("already registered")
+          ? "This account already exists. Sign in with Google, or use Forgot your password to create a password."
+          : error.message,
+      );
       return;
     }
     setForgot(false);
@@ -216,6 +220,9 @@ function AuthPage() {
             >
               <Mail className="mr-2 h-4 w-4" /> Continue with Google
             </Button>
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              If you first joined with Google, use this button—or reset your password below.
+            </p>
             <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="h-px flex-1 bg-border" />
               or use email
@@ -282,13 +289,14 @@ function AuthPage() {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in…" : "Sign in"}
                   </Button>
-                  <button
+                  <Button
                     type="button"
-                    className="w-full text-center text-xs text-primary hover:underline"
+                    variant="link"
+                    className="h-auto w-full text-xs"
                     onClick={() => setForgot(true)}
                   >
                     Forgot your password?
-                  </button>
+                  </Button>
                 </form>
                 )}
               </TabsContent>
@@ -370,6 +378,17 @@ function AuthPage() {
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in…" : "Admin sign in"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto w-full text-xs"
+                    onClick={() => {
+                      setEmail(adminEmail);
+                      setForgot(true);
+                    }}
+                  >
+                    Set or reset admin password
                   </Button>
                 </form>
               </TabsContent>
