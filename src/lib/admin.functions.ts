@@ -238,3 +238,196 @@ export const updateMember = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+
+/* ------------------------------------------------------------------ */
+/* Deletion                                                            */
+/* ------------------------------------------------------------------ */
+
+/** Main Admin only: permanently remove a member and everything they own. */
+export const deleteMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertMainAdmin(context);
+    if (data.userId === context.userId) throw new Error("You cannot delete your own account.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: attempts } = await supabaseAdmin
+      .from("exam_attempts")
+      .select("id")
+      .eq("user_id", data.userId);
+    const attemptIds = (attempts ?? []).map((a) => a.id);
+    if (attemptIds.length) await supabaseAdmin.from("answers").delete().in("attempt_id", attemptIds);
+
+    const { data: sessions } = await supabaseAdmin
+      .from("ai_practice_sessions")
+      .select("id")
+      .eq("user_id", data.userId);
+    const sessionIds = (sessions ?? []).map((s) => s.id);
+    if (sessionIds.length)
+      await supabaseAdmin.from("ai_practice_questions").delete().in("session_id", sessionIds);
+
+    await supabaseAdmin.from("ai_practice_sessions").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("exam_attempts").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("exam_assignments").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("location_events").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("notifications").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    await supabaseAdmin.from("profiles").delete().eq("id", data.userId);
+
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Staff: delete an exam and everything attached to it. */
+export const deleteExam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { examId: string }) => z.object({ examId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: attempts } = await supabaseAdmin
+      .from("exam_attempts")
+      .select("id")
+      .eq("exam_id", data.examId);
+    const attemptIds = (attempts ?? []).map((a) => a.id);
+    if (attemptIds.length) await supabaseAdmin.from("answers").delete().in("attempt_id", attemptIds);
+
+    await supabaseAdmin.from("location_events").delete().eq("exam_id", data.examId);
+    await supabaseAdmin.from("exam_attempts").delete().eq("exam_id", data.examId);
+    await supabaseAdmin.from("exam_assignments").delete().eq("exam_id", data.examId);
+    await supabaseAdmin.from("questions").delete().eq("exam_id", data.examId);
+    await supabaseAdmin.from("high_frequency_concepts").delete().eq("exam_id", data.examId);
+    await supabaseAdmin.from("subjects").delete().eq("exam_id", data.examId);
+    await supabaseAdmin.from("exam_sections").delete().eq("exam_id", data.examId);
+    await supabaseAdmin.from("pdf_documents").delete().eq("exam_id", data.examId);
+
+    const { error } = await supabaseAdmin.from("exams").delete().eq("id", data.examId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Staff: delete a single question. */
+export const deleteQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { questionId: string }) =>
+    z.object({ questionId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("answers").delete().eq("question_id", data.questionId);
+    const { error } = await supabaseAdmin.from("questions").delete().eq("id", data.questionId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Staff: delete a section; its questions stay but lose the section. */
+export const deleteSection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { sectionId: string }) =>
+    z.object({ sectionId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("questions")
+      .update({ section_id: null })
+      .eq("section_id", data.sectionId);
+    const { error } = await supabaseAdmin.from("exam_sections").delete().eq("id", data.sectionId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Staff: remove an exam assignment from a cadet. */
+export const deleteAssignment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { assignmentId: string }) =>
+    z.object({ assignmentId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("exam_assignments")
+      .delete()
+      .eq("id", data.assignmentId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Staff: delete a detected subject and, optionally, its questions. */
+export const deleteSubject = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { subjectId: string; withQuestions?: boolean }) =>
+    z.object({ subjectId: z.string().uuid(), withQuestions: z.boolean().optional() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.withQuestions) {
+      const { data: qs } = await supabaseAdmin
+        .from("questions")
+        .select("id")
+        .eq("subject_id", data.subjectId);
+      const ids = (qs ?? []).map((q) => q.id);
+      if (ids.length) {
+        await supabaseAdmin.from("answers").delete().in("question_id", ids);
+        await supabaseAdmin.from("questions").delete().in("id", ids);
+      }
+    } else {
+      await supabaseAdmin
+        .from("questions")
+        .update({ subject_id: null })
+        .eq("subject_id", data.subjectId);
+    }
+    const { error } = await supabaseAdmin.from("subjects").delete().eq("id", data.subjectId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Staff: delete an uploaded document record and its detected material. */
+export const deletePdfDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { documentId: string }) =>
+    z.object({ documentId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("high_frequency_concepts")
+      .delete()
+      .eq("pdf_document_id", data.documentId);
+    await supabaseAdmin
+      .from("exam_sections")
+      .update({ pdf_document_id: null })
+      .eq("pdf_document_id", data.documentId);
+    await supabaseAdmin
+      .from("subjects")
+      .update({ pdf_document_id: null })
+      .eq("pdf_document_id", data.documentId);
+    const { error } = await supabaseAdmin.from("pdf_documents").delete().eq("id", data.documentId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Cadet or staff: delete one of my own notifications. */
+export const deleteNotification = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { notificationId: string }) =>
+    z.object({ notificationId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("notifications")
+      .delete()
+      .eq("id", data.notificationId)
+      .eq("user_id", context.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
