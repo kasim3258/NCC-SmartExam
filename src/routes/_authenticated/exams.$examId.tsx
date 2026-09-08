@@ -464,7 +464,48 @@ function ManageExam() {
               </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Existing assignments</CardTitle>
+              <CardDescription>
+                Saved records for this exam, straight from the database.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {assignments.isLoading ? (
+                <Skeleton className="h-16" />
+              ) : (assignments.data ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  This exam has not been assigned to anyone yet.
+                </p>
+              ) : (
+                (assignments.data ?? []).map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-medium">{a.cadet?.name || a.cadet?.email || a.user_id}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {a.cadet?.cadet_category ?? "No category"} ·{" "}
+                        {a.deadline
+                          ? `due ${new Date(a.deadline).toLocaleString()}`
+                          : "no deadline"}{" "}
+                        · assigned {new Date(a.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {a.mandatory && <Badge variant="destructive">Mandatory</Badge>}
+                      <Badge variant="secondary">{a.status}</Badge>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
+
       </Tabs>
     </div>
   );
