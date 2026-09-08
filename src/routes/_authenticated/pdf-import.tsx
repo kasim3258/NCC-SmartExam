@@ -48,7 +48,8 @@ export const Route = createFileRoute("/_authenticated/pdf-import")({
   component: PdfImport,
 });
 
-const CHUNK_PAGES = 6;
+const SCAN_PAGES = 40; // pages skimmed per subject-detection request
+const SUBJECT_PAGES = 12; // pages of full text sent when writing a subject's questions
 
 type LogLine = { text: string; kind: "info" | "ok" | "error" };
 
@@ -62,9 +63,11 @@ function PdfImport() {
   const [log, setLog] = useState<LogLine[]>([]);
 
   const createDoc = useServerFn(createPdfDocument);
-  const analyze = useServerFn(analyzePdfChunk);
-  const generate = useServerFn(generateSectionQuestions);
+  const detect = useServerFn(detectSubjects);
+  const fetchSubjects = useServerFn(listSubjects);
+  const generate = useServerFn(generateSubjectQuestions);
   const finish = useServerFn(finishPdfDocument);
+
 
   const { data: exams } = useQuery({
     queryKey: ["exams-for-pdf"],
