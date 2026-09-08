@@ -185,7 +185,8 @@ function ManageExam() {
           mandatory,
           deadline: deadline ? new Date(deadline).toISOString() : null,
         },
-      }),
+      });
+    },
     onSuccess: (r) => {
       toast.success(`Exam assigned successfully to ${r.assigned} cadet(s).`);
       if (r.skipped.length) {
