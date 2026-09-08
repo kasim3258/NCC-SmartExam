@@ -296,6 +296,39 @@ function PdfImport() {
         </CardContent>
       </Card>
 
+      {examId && (subjects ?? []).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Subjects found in this exam's material</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(subjects ?? []).map((s) => (
+              <div key={s.id} className="rounded-md border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium">{s.name}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      pages {s.start_page ?? "?"}–{s.end_page ?? "?"}
+                    </Badge>
+                    <Badge>{s.question_count} question(s)</Badge>
+                  </div>
+                </div>
+                {s.description && (
+                  <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>
+                )}
+                {s.topics.length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Topics: {s.topics.slice(0, 12).join(" · ")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+
+
       {(running || log.length > 0) && (
         <Card>
           <CardHeader>
