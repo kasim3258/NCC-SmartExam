@@ -184,11 +184,19 @@ function ManageExam() {
         },
       }),
     onSuccess: (r) => {
-      toast.success(`Assigned to ${r.assigned} cadet(s).`);
+      toast.success(`Exam assigned successfully to ${r.assigned} cadet(s).`);
+      if (r.skipped.length) {
+        toast.warning(r.skipped.map((s) => `${s.name} ${s.reason}`).join("; "));
+      }
       setSelected([]);
       qc.invalidateQueries({ queryKey: ["exam-assignments", examId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      // eslint-disable-next-line no-console
+      console.error("[assign] failed", e);
+      toast.error(e.message || "Unable to assign exam. Please try again.");
+    },
+
   });
 
   if (!isAdmin)
