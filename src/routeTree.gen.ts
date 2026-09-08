@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAiReviewRouteImport } from './routes/_authenticated/ai-review'
 import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
 import { Route as AuthenticatedCadetsRouteImport } from './routes/_authenticated/cadets'
+import { Route as AuthenticatedContentSourcesRouteImport } from './routes/_authenticated/content-sources'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedGeoActivityRouteImport } from './routes/_authenticated/geo-activity'
 import { Route as AuthenticatedMyExamsRouteImport } from './routes/_authenticated/my-exams'
@@ -63,6 +64,12 @@ const AuthenticatedCadetsRoute = AuthenticatedCadetsRouteImport.update({
   path: '/cadets',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedContentSourcesRoute =
+  AuthenticatedContentSourcesRouteImport.update({
+    id: '/content-sources',
+    path: '/content-sources',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -137,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
   '/cadets': typeof AuthenticatedCadetsRoute
+  '/content-sources': typeof AuthenticatedContentSourcesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/my-exams': typeof AuthenticatedMyExamsRoute
@@ -157,6 +165,7 @@ export interface FileRoutesByTo {
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
   '/cadets': typeof AuthenticatedCadetsRoute
+  '/content-sources': typeof AuthenticatedContentSourcesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/my-exams': typeof AuthenticatedMyExamsRoute
@@ -179,6 +188,7 @@ export interface FileRoutesById {
   '/_authenticated/ai-review': typeof AuthenticatedAiReviewRoute
   '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
   '/_authenticated/cadets': typeof AuthenticatedCadetsRoute
+  '/_authenticated/content-sources': typeof AuthenticatedContentSourcesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/geo-activity': typeof AuthenticatedGeoActivityRoute
   '/_authenticated/my-exams': typeof AuthenticatedMyExamsRoute
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/ai-review'
     | '/analysis'
     | '/cadets'
+    | '/content-sources'
     | '/dashboard'
     | '/geo-activity'
     | '/my-exams'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/ai-review'
     | '/analysis'
     | '/cadets'
+    | '/content-sources'
     | '/dashboard'
     | '/geo-activity'
     | '/my-exams'
@@ -242,6 +254,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ai-review'
     | '/_authenticated/analysis'
     | '/_authenticated/cadets'
+    | '/_authenticated/content-sources'
     | '/_authenticated/dashboard'
     | '/_authenticated/geo-activity'
     | '/_authenticated/my-exams'
@@ -312,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/cadets'
       fullPath: '/cadets'
       preLoaderRoute: typeof AuthenticatedCadetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/content-sources': {
+      id: '/_authenticated/content-sources'
+      path: '/content-sources'
+      fullPath: '/content-sources'
+      preLoaderRoute: typeof AuthenticatedContentSourcesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -405,6 +425,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReviewRoute: typeof AuthenticatedAiReviewRoute
   AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
   AuthenticatedCadetsRoute: typeof AuthenticatedCadetsRoute
+  AuthenticatedContentSourcesRoute: typeof AuthenticatedContentSourcesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGeoActivityRoute: typeof AuthenticatedGeoActivityRoute
   AuthenticatedMyExamsRoute: typeof AuthenticatedMyExamsRoute
@@ -423,6 +444,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReviewRoute: AuthenticatedAiReviewRoute,
   AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
   AuthenticatedCadetsRoute: AuthenticatedCadetsRoute,
+  AuthenticatedContentSourcesRoute: AuthenticatedContentSourcesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGeoActivityRoute: AuthenticatedGeoActivityRoute,
   AuthenticatedMyExamsRoute: AuthenticatedMyExamsRoute,
