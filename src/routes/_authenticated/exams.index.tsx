@@ -244,11 +244,18 @@ function ExamsPage() {
                     />
                     {exam.published ? "Published" : "Draft"}
                   </label>
-                  <Button asChild size="sm" variant="outline">
-                    <Link to="/exams/$examId" params={{ examId: exam.id }}>
-                      Manage
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/exams/$examId" params={{ examId: exam.id }}>
+                        Manage
+                      </Link>
+                    </Button>
+                    <DeleteButton
+                      label={exam.title}
+                      description="The paper, its sections, questions, assignments and every cadet result for it will be removed permanently."
+                      onConfirm={() => removeExam.mutate(exam.id)}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
