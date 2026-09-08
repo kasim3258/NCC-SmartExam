@@ -20,10 +20,12 @@ import {
 } from "@/components/ui/select";
 import {
   createPdfDocument,
-  analyzePdfChunk,
-  generateSectionQuestions,
+  detectSubjects,
+  listSubjects,
+  generateSubjectQuestions,
   finishPdfDocument,
 } from "@/lib/ai.functions";
+
 
 export const Route = createFileRoute("/_authenticated/pdf-import")({
   head: () => ({
