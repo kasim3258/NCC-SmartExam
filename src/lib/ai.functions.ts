@@ -525,16 +525,24 @@ export const generatePracticeSet = createServerFn({ method: "POST" })
 
     const focus = data.topic?.trim() || weakTopics.join(", ") || "General NCC syllabus";
 
-    const raw = await callAI(
-      `You write NCC practice multiple-choice questions. Reply with STRICT JSON array only.
-Each item: {"question":string,"a":string,"b":string,"c":string,"d":string,"correct":"A"|"B"|"C"|"D","explanation":string,"topic":string,"difficulty":"Easy"|"Medium"|"Hard"}`,
-      `Focus areas (the cadet is weakest here): ${focus}. Write ${data.count} questions, increasing in difficulty.`,
-    );
-
-    const items = parseJson<any[]>(raw, []).filter(
-      (q) => q?.question && q?.a && q?.b && q?.c && q?.d && ["A", "B", "C", "D"].includes(q?.correct),
-    );
-    if (!items.length) throw new Error("Could not generate practice questions. Please try again.");
+    let items: any[] = [];
+    for (let attempt = 0; attempt < 2 && items.length === 0; attempt++) {
+      const raw = await callAI(
+        `You write NCC practice multiple-choice questions. Reply with a STRICT JSON array only — no prose, no markdown fence.
+Each item: {"question":string,"a":string,"b":string,"c":string,"d":string,"correct":"A"|"B"|"C"|"D","explanation":string,"topic":string,"difficulty":"Easy"|"Medium"|"Hard"}
+Keep every explanation under 30 words so the array is always complete.`,
+        `Focus areas (the cadet is weakest here): ${focus.slice(0, 300)}. Write exactly ${
+          data.count
+        } questions, increasing in difficulty.`,
+      );
+      items = parseJson<any[]>(raw, []).filter(
+        (q) => q?.question && q?.a && q?.b && q?.c && q?.d && ["A", "B", "C", "D"].includes(q?.correct),
+      );
+    }
+    if (!items.length)
+      throw new Error(
+        "The practice questions came back unreadable. Please try again in a moment.",
+      );
 
     const { data: session, error } = await supabaseAdmin
       .from("ai_practice_sessions")
