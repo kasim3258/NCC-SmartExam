@@ -619,6 +619,7 @@ export type Database = {
           source_section: string | null
           source_type: Database["public"]["Enums"]["question_source_type"]
           subject: string | null
+          subject_id: string | null
           topic: string | null
           updated_at: string
         }
@@ -648,6 +649,7 @@ export type Database = {
           source_section?: string | null
           source_type?: Database["public"]["Enums"]["question_source_type"]
           subject?: string | null
+          subject_id?: string | null
           topic?: string | null
           updated_at?: string
         }
@@ -677,6 +679,7 @@ export type Database = {
           source_section?: string | null
           source_type?: Database["public"]["Enums"]["question_source_type"]
           subject?: string | null
+          subject_id?: string | null
           topic?: string | null
           updated_at?: string
         }
@@ -693,6 +696,82 @@ export type Database = {
             columns: ["section_id"]
             isOneToOne: false
             referencedRelation: "exam_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          approved: boolean
+          confidence: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_page: number | null
+          exam_id: string | null
+          id: string
+          name: string
+          page_count: number
+          pdf_document_id: string | null
+          start_page: number | null
+          subject_order: number
+          topics: Json
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_page?: number | null
+          exam_id?: string | null
+          id?: string
+          name: string
+          page_count?: number
+          pdf_document_id?: string | null
+          start_page?: number | null
+          subject_order?: number
+          topics?: Json
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_page?: number | null
+          exam_id?: string | null
+          id?: string
+          name?: string
+          page_count?: number
+          pdf_document_id?: string | null
+          start_page?: number | null
+          subject_order?: number
+          topics?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subjects_pdf_document_id_fkey"
+            columns: ["pdf_document_id"]
+            isOneToOne: false
+            referencedRelation: "pdf_documents"
             referencedColumns: ["id"]
           },
         ]

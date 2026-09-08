@@ -20,10 +20,12 @@ import {
 } from "@/components/ui/select";
 import {
   createPdfDocument,
-  analyzePdfChunk,
-  generateSectionQuestions,
+  detectSubjects,
+  listSubjects,
+  generateSubjectQuestions,
   finishPdfDocument,
 } from "@/lib/ai.functions";
+
 
 export const Route = createFileRoute("/_authenticated/pdf-import")({
   head: () => ({
@@ -46,7 +48,8 @@ export const Route = createFileRoute("/_authenticated/pdf-import")({
   component: PdfImport,
 });
 
-const CHUNK_PAGES = 6;
+const SCAN_PAGES = 40; // pages skimmed per subject-detection request
+const SUBJECT_PAGES = 12; // pages of full text sent when writing a subject's questions
 
 type LogLine = { text: string; kind: "info" | "ok" | "error" };
 
@@ -60,9 +63,11 @@ function PdfImport() {
   const [log, setLog] = useState<LogLine[]>([]);
 
   const createDoc = useServerFn(createPdfDocument);
-  const analyze = useServerFn(analyzePdfChunk);
-  const generate = useServerFn(generateSectionQuestions);
+  const detect = useServerFn(detectSubjects);
+  const fetchSubjects = useServerFn(listSubjects);
+  const generate = useServerFn(generateSubjectQuestions);
   const finish = useServerFn(finishPdfDocument);
+
 
   const { data: exams } = useQuery({
     queryKey: ["exams-for-pdf"],
@@ -90,6 +95,15 @@ function PdfImport() {
       return data;
     },
   });
+
+  const { data: subjects, refetch: refetchSubjects } = useQuery({
+    queryKey: ["subjects", examId],
+    enabled: isAdmin && !!examId,
+    staleTime: 0,
+    queryFn: () => fetchSubjects({ data: { examId } }),
+  });
+
+
 
   const say = (text: string, kind: LogLine["kind"] = "info") =>
     setLog((l) => [...l, { text, kind }]);
@@ -143,54 +157,74 @@ function PdfImport() {
       });
       pdfId = created.pdfId;
 
-      const chunks: { page: number; text: string }[][] = [];
-      for (let i = 0; i < pages.length; i += CHUNK_PAGES) chunks.push(pages.slice(i, i + CHUNK_PAGES));
+      /* pass 1 — skim the whole document and work out its subjects */
+      const scans: { page: number; text: string }[][] = [];
+      for (let i = 0; i < pages.length; i += SCAN_PAGES) scans.push(pages.slice(i, i + SCAN_PAGES));
 
-      const sections = new Map<string, string>();
-      let existingFound = 0;
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i]!;
+      for (let i = 0; i < scans.length; i++) {
+        const chunk = scans[i]!;
         const first = chunk[0]!.page;
         const last = chunk[chunk.length - 1]!.page;
-        say(`Analysing pages ${first}–${last}…`);
+        say(`Looking for subjects on pages ${first}–${last}…`);
         try {
-          const res = await analyze({ data: { pdfId, examId, pages: chunk } });
-          res.sections.forEach((s) => sections.set(s.id, s.name));
-          existingFound += res.existingQuestions;
+          const res = await detect({ data: { pdfId, examId, pages: chunk } });
+          const fresh = res.subjects.filter((s) => s.created).map((s) => s.name);
           say(
-            `Found ${res.sections.length} section(s), ${res.conceptCount} concept(s), ${res.existingQuestions} printed question(s).`,
+            fresh.length
+              ? `New subject(s): ${fresh.join(", ")}.`
+              : res.subjects.length
+                ? `Continued: ${res.subjects.map((s) => s.name).join(", ")}.`
+                : "No subject found on these pages.",
             "ok",
           );
         } catch (e: any) {
           say(`Pages ${first}–${last}: ${e.message}`, "error");
         }
-        setProgress(25 + Math.round(((i + 1) / chunks.length) * 45));
+        setProgress(25 + Math.round(((i + 1) / scans.length) * 35));
       }
 
+      const subjects = await fetchSubjects({ data: { examId } });
+      if (!subjects.length) {
+        throw new Error("No subjects could be identified in this document.");
+      }
+      say(`${subjects.length} subject(s) identified.`, "ok");
+
+      /* pass 2 — read each subject's own pages and write its questions */
       const count = Math.max(1, Math.min(30, Number(perSection) || 10));
-      const list = [...sections.entries()];
+      let printedFound = 0;
       let generated = 0;
-      for (let i = 0; i < list.length; i++) {
-        const [sectionId, name] = list[i]!;
-        say(`Writing ${count} questions for “${name}”…`);
+      for (let i = 0; i < subjects.length; i++) {
+        const s = subjects[i]!;
+        const start = s.start_page ?? 1;
+        const end = s.end_page ?? start;
+        const own = pages
+          .filter((p) => p.page >= start && p.page <= end)
+          .slice(0, SUBJECT_PAGES);
+        say(`Reading “${s.name}” (pages ${start}–${end}) and writing ${count} questions…`);
         try {
-          const res = await generate({ data: { examId, sectionId, count } });
+          const res = await generate({ data: { examId, subjectId: s.id, count, pages: own } });
+          printedFound += res.printed;
           generated += res.generated;
-          say(`${res.generated} new question(s); ${res.skippedDuplicates} duplicate(s) skipped.`, "ok");
+          say(
+            `${s.name}: ${res.printed} printed question(s) captured, ${res.generated} new question(s) written, ${res.skippedDuplicates} duplicate(s) skipped.`,
+            "ok",
+          );
         } catch (e: any) {
-          say(`${name}: ${e.message}`, "error");
+          say(`${s.name}: ${e.message}`, "error");
         }
-        setProgress(70 + Math.round(((i + 1) / Math.max(1, list.length)) * 30));
+        setProgress(60 + Math.round(((i + 1) / subjects.length) * 40));
       }
 
       await finish({ data: { pdfId, status: "REVIEW", error: null } });
       setProgress(100);
       say(
-        `Done. ${existingFound} printed question(s) captured and ${generated} new question(s) written — all waiting for your approval.`,
+        `Done. ${subjects.length} subject(s), ${printedFound} printed question(s) captured and ${generated} new question(s) written — all waiting for your approval.`,
         "ok",
       );
       toast.success("Questions are ready for review.");
       refetchDocs();
+      refetchSubjects();
+
     } catch (e: any) {
       say(e.message, "error");
       toast.error(e.message);
@@ -209,7 +243,7 @@ function PdfImport() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">PDF question generator</h1>
         <p className="text-sm text-muted-foreground">
-          Upload study material or a past paper. Sections, repeated concepts and questions are detected
+          Upload study material or a past paper. The subjects it teaches, repeated concepts and questions are detected
           automatically, then wait for your approval.
         </p>
       </div>
@@ -244,7 +278,7 @@ function PdfImport() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="count">New questions per section</Label>
+            <Label htmlFor="count">New questions per subject</Label>
             <Input
               id="count"
               type="number"
@@ -261,6 +295,39 @@ function PdfImport() {
           </div>
         </CardContent>
       </Card>
+
+      {examId && (subjects ?? []).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Subjects found in this exam's material</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(subjects ?? []).map((s) => (
+              <div key={s.id} className="rounded-md border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium">{s.name}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      pages {s.start_page ?? "?"}–{s.end_page ?? "?"}
+                    </Badge>
+                    <Badge>{s.question_count} question(s)</Badge>
+                  </div>
+                </div>
+                {s.description && (
+                  <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>
+                )}
+                {s.topics.length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Topics: {s.topics.slice(0, 12).join(" · ")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+
 
       {(running || log.length > 0) && (
         <Card>
