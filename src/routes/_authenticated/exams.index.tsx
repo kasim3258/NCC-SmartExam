@@ -88,6 +88,15 @@ function ExamsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const removeExam = useMutation({
+    mutationFn: (examId: string) => deleteExam({ data: { examId } }),
+    onSuccess: () => {
+      toast.success("Exam deleted.");
+      qc.invalidateQueries({ queryKey: ["exams"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const togglePublish = useMutation({
     mutationFn: async ({ id, published }: { id: string; published: boolean }) => {
       const { error } = await supabase.from("exams").update({ published }).eq("id", id);
