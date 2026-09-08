@@ -46,6 +46,7 @@ function AuthPage() {
   const [category, setCategory] = useState<"NCC B" | "NCC C">("NCC B");
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
+  const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -137,6 +138,26 @@ function AuthPage() {
       return;
     }
     router.navigate({ to: "/dashboard" });
+  };
+
+  const sendReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    if (!email.trim()) {
+      toast.error("Enter your email address first.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setForgot(false);
+    toast.success("Password reset link sent. Check your email.");
   };
 
 
