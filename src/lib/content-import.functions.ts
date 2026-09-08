@@ -302,7 +302,10 @@ export const updateContentSource = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = {};
     if (data.baseUrl !== undefined) patch["base_url"] = data.baseUrl;
     if (data.enabled !== undefined) patch["enabled"] = data.enabled;
-    const { error } = await supabaseAdmin.from("content_sources").update(patch).eq("id", data.sourceId);
+    const { error } = await supabaseAdmin
+      .from("content_sources")
+      .update(patch as never)
+      .eq("id", data.sourceId);
     if (error) throw new Error(error.message);
     await audit(supabaseAdmin, context.userId, "SOURCE_UPDATED", "content_sources", data.sourceId, null, patch);
     return { ok: true };
