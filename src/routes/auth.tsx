@@ -46,6 +46,7 @@ function AuthPage() {
   const [category, setCategory] = useState<"NCC B" | "NCC C">("NCC B");
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
+  const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -139,6 +140,26 @@ function AuthPage() {
     router.navigate({ to: "/dashboard" });
   };
 
+  const sendReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    if (!email.trim()) {
+      toast.error("Enter your email address first.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setForgot(false);
+    toast.success("Password reset link sent. Check your email.");
+  };
+
 
   const signUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,6 +225,34 @@ function AuthPage() {
 
 
               <TabsContent value="signin">
+                {forgot ? (
+                  <form onSubmit={sendReset} className="space-y-4 pt-4">
+                    <p className="text-xs text-muted-foreground">
+                      Enter your account email and we'll send you a link to set a new password.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="fp-email">Email</Label>
+                      <Input
+                        id="fp-email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Sending…" : "Send reset link"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setForgot(false)}
+                    >
+                      Back to sign in
+                    </Button>
+                  </form>
+                ) : (
                 <form onSubmit={signIn} className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="si-email">Email</Label>
@@ -228,7 +277,15 @@ function AuthPage() {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in…" : "Sign in"}
                   </Button>
+                  <button
+                    type="button"
+                    className="w-full text-center text-xs text-primary hover:underline"
+                    onClick={() => setForgot(true)}
+                  >
+                    Forgot your password?
+                  </button>
                 </form>
+                )}
               </TabsContent>
 
               <TabsContent value="signup">
