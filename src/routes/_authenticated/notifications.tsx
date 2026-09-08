@@ -52,6 +52,15 @@ function Notifications() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
+  const remove = useMutation({
+    mutationFn: (notificationId: string) => deleteNotification({ data: { notificationId } }),
+    onSuccess: () => {
+      toast.success("Notification deleted.");
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const unread = (data ?? []).filter((n) => !n.is_read).length;
 
   return (
