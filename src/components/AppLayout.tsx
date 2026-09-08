@@ -27,6 +27,7 @@ const cadetNav: NavItem[] = [
   { to: "/my-exams", label: "My Exams", icon: ClipboardList },
   { to: "/results", label: "Results", icon: BookOpen },
   { to: "/practice", label: "AI Practice", icon: Sparkles },
+  { to: "/army-practice", label: "Army Wing Practice", icon: Shield },
   { to: "/analysis", label: "My Performance", icon: BarChart3 },
   
   { to: "/notifications", label: "Notifications", icon: Bell },
