@@ -174,15 +174,19 @@ function ManageExam() {
   const [deadline, setDeadline] = useState("");
 
   const assign = useMutation({
-    mutationFn: () =>
-      assignExam({
+    mutationFn: async () => {
+      if (deadline && new Date(deadline).getTime() <= Date.now()) {
+        throw new Error("The deadline is in the past. Choose a future date and time.");
+      }
+      return assignExam({
         data: {
           examId,
           userIds: selected,
           mandatory,
           deadline: deadline ? new Date(deadline).toISOString() : null,
         },
-      }),
+      });
+    },
     onSuccess: (r) => {
       toast.success(`Exam assigned successfully to ${r.assigned} cadet(s).`);
       if (r.skipped.length) {
@@ -414,6 +418,9 @@ function ManageExam() {
                   <Input
                     id="dl"
                     type="datetime-local"
+                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+                      .toISOString()
+                      .slice(0, 16)}
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
                   />
