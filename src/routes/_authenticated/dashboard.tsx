@@ -165,9 +165,10 @@ function Dashboard() {
                 className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
               >
                 <div>
-                  <p className="font-medium">{a.exams?.title}</p>
+                  <p className="font-medium">{a.exam?.title ?? "Exam unavailable"}</p>
                   <p className="text-xs text-muted-foreground">
-                    {a.exams?.duration_minutes} minutes
+                    {a.exam?.duration_minutes ?? "—"} minutes
+
                     {a.deadline ? ` · due ${new Date(a.deadline).toLocaleString()}` : ""}
                   </p>
                 </div>
