@@ -448,6 +448,7 @@ function ManageExam() {
                       className="flex items-center gap-3 rounded-md p-2 text-sm hover:bg-muted"
                     >
                       <Checkbox
+                        disabled={assignedIds.has(c.id)}
                         checked={selected.includes(c.id)}
                         onCheckedChange={(v) =>
                           setSelected((s) =>
