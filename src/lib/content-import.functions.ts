@@ -736,7 +736,7 @@ export const reviewPracticeQuestion = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin
       .from("practice_questions")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.questionId);
     if (error) throw new Error(error.message);
 
