@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const MODEL = "google/gemini-2.5-flash";
+const OPENAI_MODEL = "gpt-4o-mini";
+const FALLBACK_MODEL = "google/gemini-2.5-flash";
 
 async function assertStaff(context: { supabase: any; userId: string }) {
   const { data } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
@@ -10,16 +11,23 @@ async function assertStaff(context: { supabase: any; userId: string }) {
 }
 
 async function callAI(system: string, user: string): Promise<string> {
-  const key = process.env["LOVABLE_API_KEY"];
+  const openaiKey = process.env["OPENAI_API_KEY"];
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const useOpenAI = Boolean(openaiKey);
+  const key = openaiKey || lovableKey;
   if (!key) throw new Error("AI is not configured.");
+
+  const url = useOpenAI
+    ? "https://api.openai.com/v1/chat/completions"
+    : "https://ai.gateway.lovable.dev/v1/chat/completions";
 
   let lastError = "";
   for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await fetch(url, {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: MODEL,
+        model: useOpenAI ? OPENAI_MODEL : FALLBACK_MODEL,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -30,7 +38,9 @@ async function callAI(system: string, user: string): Promise<string> {
     if (res.status === 429) {
       lastError = "AI rate limit reached. Please wait a moment and try again.";
     } else if (res.status === 402) {
-      throw new Error("AI credits exhausted. Please top up your workspace.");
+      throw new Error("AI credits exhausted. Please top up your account.");
+    } else if (res.status === 401) {
+      throw new Error("The AI key was rejected. Please check the saved API key.");
     } else if (!res.ok) {
       lastError = `AI request failed (${res.status}).`;
     } else {
@@ -41,6 +51,7 @@ async function callAI(system: string, user: string): Promise<string> {
   }
   throw new Error(lastError || "AI request failed.");
 }
+
 
 function parseJson<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
