@@ -5,7 +5,15 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useServerFn } from "@tanstack/react-start";
-import { assignExam, listExamAssignments, listMembers } from "@/lib/admin.functions";
+import {
+  assignExam,
+  deleteAssignment,
+  deleteQuestion,
+  deleteSection,
+  listExamAssignments,
+  listMembers,
+} from "@/lib/admin.functions";
+import { DeleteButton } from "@/components/DeleteButton";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -169,6 +177,34 @@ function ManageExam() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const removeSection = useMutation({
+    mutationFn: (sectionId: string) => deleteSection({ data: { sectionId } }),
+    onSuccess: () => {
+      toast.success("Section deleted.");
+      qc.invalidateQueries({ queryKey: ["exam-sections", examId] });
+      qc.invalidateQueries({ queryKey: ["exam-questions", examId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeQuestion = useMutation({
+    mutationFn: (questionId: string) => deleteQuestion({ data: { questionId } }),
+    onSuccess: () => {
+      toast.success("Question deleted.");
+      qc.invalidateQueries({ queryKey: ["exam-questions", examId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeAssignment = useMutation({
+    mutationFn: (assignmentId: string) => deleteAssignment({ data: { assignmentId } }),
+    onSuccess: () => {
+      toast.success("Assignment removed.");
+      qc.invalidateQueries({ queryKey: ["exam-assignments", examId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const [selected, setSelected] = useState<string[]>([]);
   const [mandatory, setMandatory] = useState(false);
   const [deadline, setDeadline] = useState("");
@@ -263,8 +299,13 @@ function ManageExam() {
               <Card key={s.id}>
                 <CardContent className="flex items-center justify-between gap-3 py-3 text-sm">
                   <span className="font-medium">{s.section_name}</span>
-                  <span className="text-muted-foreground">
+                  <span className="flex items-center gap-2 text-muted-foreground">
                     {s.marks_per_question} mark(s) · −{s.negative_mark}
+                    <DeleteButton
+                      label={s.section_name}
+                      description="Questions in this section are kept, but they will no longer belong to a section."
+                      onConfirm={() => removeSection.mutate(s.id)}
+                    />
                   </span>
                 </CardContent>
               </Card>
@@ -395,6 +436,10 @@ function ManageExam() {
                       >
                         {item.review_status}
                       </Badge>
+                      <DeleteButton
+                        label="this question"
+                        onConfirm={() => removeQuestion.mutate(item.id)}
+                      />
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -510,6 +555,10 @@ function ManageExam() {
                     <div className="flex items-center gap-2">
                       {a.mandatory && <Badge variant="destructive">Mandatory</Badge>}
                       <Badge variant="secondary">{a.status}</Badge>
+                      <DeleteButton
+                        label={`this assignment for ${a.cadet?.name || a.cadet?.email || "this cadet"}`}
+                        onConfirm={() => removeAssignment.mutate(a.id)}
+                      />
                     </div>
                   </div>
                 ))
