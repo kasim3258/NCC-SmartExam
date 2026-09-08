@@ -136,7 +136,7 @@ function ContentSources() {
         </p>
       </div>
 
-      {isLoading || !source ? (
+      {isLoading || !data || !source ? (
         <Skeleton className="h-64" />
       ) : (
         <>
