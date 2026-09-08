@@ -96,6 +96,15 @@ function PdfImport() {
     },
   });
 
+  const { data: subjects, refetch: refetchSubjects } = useQuery({
+    queryKey: ["subjects", examId],
+    enabled: isAdmin && !!examId,
+    staleTime: 0,
+    queryFn: () => fetchSubjects({ data: { examId } }),
+  });
+
+
+
   const say = (text: string, kind: LogLine["kind"] = "info") =>
     setLog((l) => [...l, { text, kind }]);
 
