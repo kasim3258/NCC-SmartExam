@@ -2,50 +2,75 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const OPENAI_MODEL = "gpt-4o-mini";
-const FALLBACK_MODEL = "google/gemini-2.5-flash";
+const MODEL = "openai/gpt-6-astra";
 
 async function assertStaff(context: { supabase: any; userId: string }) {
   const { data } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
   if (!data) throw new Error("Admin access required.");
 }
 
+/** Built-in AI. No API key is ever requested from the user. */
 async function callAI(system: string, user: string): Promise<string> {
-  const openaiKey = process.env["OPENAI_API_KEY"];
-  const lovableKey = process.env["LOVABLE_API_KEY"];
-  const useOpenAI = Boolean(openaiKey);
-  const key = openaiKey || lovableKey;
-  if (!key) throw new Error("AI is not configured.");
-
-  const url = useOpenAI
-    ? "https://api.openai.com/v1/chat/completions"
-    : "https://ai.gateway.lovable.dev/v1/chat/completions";
+  const key = process.env["LOVABLE_API_KEY"];
+  if (!key) throw new Error("The built-in AI is not available for this application yet.");
 
   let lastError = "";
   for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(url, {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Lovable-API-Key": key,
+        "X-Lovable-AIG-SDK": "fetch",
+      },
       body: JSON.stringify({
-        model: useOpenAI ? OPENAI_MODEL : FALLBACK_MODEL,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
+        model: MODEL,
+        instructions: system,
+        input: user,
+        stream: true,
+        reasoning: { effort: "low" },
       }),
     });
 
     if (res.status === 429) {
-      lastError = "AI rate limit reached. Please wait a moment and try again.";
+      lastError = "The AI is busy right now. Please wait a moment and try again.";
     } else if (res.status === 402) {
-      throw new Error("AI credits exhausted. Please top up your account.");
-    } else if (res.status === 401) {
-      throw new Error("The AI key was rejected. Please check the saved API key.");
-    } else if (!res.ok) {
+      throw new Error("The AI allowance for this workspace is used up. Please add credits.");
+    } else if (!res.ok || !res.body) {
       lastError = `AI request failed (${res.status}).`;
     } else {
-      const json = (await res.json()) as any;
-      return json?.choices?.[0]?.message?.content ?? "";
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let text = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const payload = line.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+          try {
+            const ev = JSON.parse(payload) as any;
+            if (ev.type === "response.output_text.delta" && typeof ev.delta === "string") {
+              text += ev.delta;
+            } else if (
+              ev.type === "response.completed" &&
+              !text &&
+              typeof ev.response?.output_text === "string"
+            ) {
+              text = ev.response.output_text;
+            }
+          } catch {
+            /* ignore partial event */
+          }
+        }
+      }
+      if (text.trim()) return text;
+      lastError = "The AI returned an empty answer.";
     }
     await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
   }
