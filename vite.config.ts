@@ -7,33 +7,22 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 /**
- * Host-agnostic Supabase configuration.
+ * Host-agnostic Supabase configuration (Vercel, Lovable, self-hosted, ...).
  *
- * Works on any host (Vercel, Lovable, self-hosted): the values are read from the
- * build environment, accepting either the VITE_-prefixed or the plain names, so a
- * deployment that only defines SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY still ships a
- * working browser bundle, and a deployment that only defines the VITE_ names still
- * has server-side values available.
+ * Accept either the VITE_-prefixed or the plain names at build time and mirror them,
+ * so a deployment that only defines SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY still ships
+ * a working browser bundle. Vite picks up VITE_* values from process.env at config time.
  *
- * Only public (publishable) values are inlined. Secrets such as
- * SUPABASE_SERVICE_ROLE_KEY are never defined here and stay runtime-only.
+ * Only public (publishable) values are mirrored. Secrets such as
+ * SUPABASE_SERVICE_ROLE_KEY are never inlined and stay runtime-only.
  */
-const env = process.env;
-
-const publicConfig = {
-  URL: env['VITE_SUPABASE_URL'] || env['SUPABASE_URL'],
-  PUBLISHABLE_KEY: env['VITE_SUPABASE_PUBLISHABLE_KEY'] || env['SUPABASE_PUBLISHABLE_KEY'],
-  PROJECT_ID: env['VITE_SUPABASE_PROJECT_ID'] || env['SUPABASE_PROJECT_ID'],
-} as const;
-
-const define: Record<string, string> = {};
-for (const [suffix, value] of Object.entries(publicConfig)) {
+for (const suffix of ["URL", "PUBLISHABLE_KEY", "PROJECT_ID"] as const) {
+  const plain = `SUPABASE_${suffix}`;
+  const prefixed = `VITE_SUPABASE_${suffix}`;
+  const value = process.env[prefixed] || process.env[plain];
   if (!value) continue;
-  const literal = JSON.stringify(value);
-  define[`import.meta.env.VITE_SUPABASE_${suffix}`] = literal;
-  // Server (Nitro) code reads the plain names; inline them so the app does not
-  // depend on the host forwarding build-time env vars to the runtime.
-  define[`process.env.SUPABASE_${suffix}`] = literal;
+  process.env[prefixed] = value;
+  process.env[plain] = value;
 }
 
 export default defineConfig({
@@ -41,8 +30,5 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
-  },
-  vite: {
-    define,
   },
 });
