@@ -60,9 +60,14 @@ function ProfilePage() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!trimmed) return toast.error("Please enter a name/number.");
-    if (!PATTERN.test(trimmed))
-      return toast.error("Use 3–30 letters, numbers, underscores or hyphens only.");
+    if (!trimmed) {
+      toast.error("Please enter a name/number.");
+      return;
+    }
+    if (!PATTERN.test(trimmed)) {
+      toast.error("Use 3–30 letters, numbers, underscores or hyphens only.");
+      return;
+    }
     save.mutate(trimmed);
   };
 
