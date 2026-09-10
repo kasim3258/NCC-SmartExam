@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAiReviewRouteImport } from './routes/_authenticated/ai-review'
 import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
 import { Route as AuthenticatedArmyPracticeRouteImport } from './routes/_authenticated/army-practice'
+import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedCadetsRouteImport } from './routes/_authenticated/cadets'
 import { Route as AuthenticatedContentSourcesRouteImport } from './routes/_authenticated/content-sources'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -69,6 +70,11 @@ const AuthenticatedArmyPracticeRoute =
     path: '/army-practice',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCadetsRoute = AuthenticatedCadetsRouteImport.update({
   id: '/cadets',
   path: '/cadets',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
   '/army-practice': typeof AuthenticatedArmyPracticeRoute
+  '/attendance': typeof AuthenticatedAttendanceRoute
   '/cadets': typeof AuthenticatedCadetsRoute
   '/content-sources': typeof AuthenticatedContentSourcesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
   '/army-practice': typeof AuthenticatedArmyPracticeRoute
+  '/attendance': typeof AuthenticatedAttendanceRoute
   '/cadets': typeof AuthenticatedCadetsRoute
   '/content-sources': typeof AuthenticatedContentSourcesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/_authenticated/ai-review': typeof AuthenticatedAiReviewRoute
   '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
   '/_authenticated/army-practice': typeof AuthenticatedArmyPracticeRoute
+  '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/cadets': typeof AuthenticatedCadetsRoute
   '/_authenticated/content-sources': typeof AuthenticatedContentSourcesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/ai-review'
     | '/analysis'
     | '/army-practice'
+    | '/attendance'
     | '/cadets'
     | '/content-sources'
     | '/dashboard'
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/ai-review'
     | '/analysis'
     | '/army-practice'
+    | '/attendance'
     | '/cadets'
     | '/content-sources'
     | '/dashboard'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ai-review'
     | '/_authenticated/analysis'
     | '/_authenticated/army-practice'
+    | '/_authenticated/attendance'
     | '/_authenticated/cadets'
     | '/_authenticated/content-sources'
     | '/_authenticated/dashboard'
@@ -375,6 +387,13 @@ declare module '@tanstack/react-router' {
       path: '/army-practice'
       fullPath: '/army-practice'
       preLoaderRoute: typeof AuthenticatedArmyPracticeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/attendance': {
+      id: '/_authenticated/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AuthenticatedAttendanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadets': {
@@ -503,6 +522,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReviewRoute: typeof AuthenticatedAiReviewRoute
   AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
   AuthenticatedArmyPracticeRoute: typeof AuthenticatedArmyPracticeRoute
+  AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
   AuthenticatedCadetsRoute: typeof AuthenticatedCadetsRoute
   AuthenticatedContentSourcesRoute: typeof AuthenticatedContentSourcesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -526,6 +546,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReviewRoute: AuthenticatedAiReviewRoute,
   AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
   AuthenticatedArmyPracticeRoute: AuthenticatedArmyPracticeRoute,
+  AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
   AuthenticatedCadetsRoute: AuthenticatedCadetsRoute,
   AuthenticatedContentSourcesRoute: AuthenticatedContentSourcesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
