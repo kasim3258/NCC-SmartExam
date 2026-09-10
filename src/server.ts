@@ -1,7 +1,12 @@
 import "./lib/error-capture";
+import "./lib/supabase-env.server";
 
 import { consumeLastCapturedError, describeError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import {
+  hydrateSupabaseEnvFromBinding,
+  missingSupabasePublicEnv,
+} from "./lib/supabase-env.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
