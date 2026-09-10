@@ -25,6 +25,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedPdfImportRouteImport } from './routes/_authenticated/pdf-import'
 import { Route as AuthenticatedPracticeRouteImport } from './routes/_authenticated/practice'
 import { Route as AuthenticatedPracticeReviewRouteImport } from './routes/_authenticated/practice-review'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedQuestionBankRouteImport } from './routes/_authenticated/question-bank'
 import { Route as AuthenticatedTejasExamsRouteImport } from './routes/_authenticated/tejas-exams'
 import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
@@ -117,6 +118,11 @@ const AuthenticatedPracticeReviewRoute =
     path: '/practice-review',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQuestionBankRoute =
   AuthenticatedQuestionBankRouteImport.update({
     id: '/question-bank',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/pdf-import': typeof AuthenticatedPdfImportRoute
   '/practice': typeof AuthenticatedPracticeRoute
   '/practice-review': typeof AuthenticatedPracticeReviewRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/tejas-exams': typeof AuthenticatedTejasExamsRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/pdf-import': typeof AuthenticatedPdfImportRoute
   '/practice': typeof AuthenticatedPracticeRoute
   '/practice-review': typeof AuthenticatedPracticeReviewRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/tejas-exams': typeof AuthenticatedTejasExamsRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/_authenticated/pdf-import': typeof AuthenticatedPdfImportRoute
   '/_authenticated/practice': typeof AuthenticatedPracticeRoute
   '/_authenticated/practice-review': typeof AuthenticatedPracticeReviewRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/question-bank': typeof AuthenticatedQuestionBankRoute
   '/_authenticated/tejas-exams': typeof AuthenticatedTejasExamsRoute
   '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/pdf-import'
     | '/practice'
     | '/practice-review'
+    | '/profile'
     | '/question-bank'
     | '/tejas-exams'
     | '/exam/$examId'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/pdf-import'
     | '/practice'
     | '/practice-review'
+    | '/profile'
     | '/question-bank'
     | '/tejas-exams'
     | '/exam/$examId'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pdf-import'
     | '/_authenticated/practice'
     | '/_authenticated/practice-review'
+    | '/_authenticated/profile'
     | '/_authenticated/question-bank'
     | '/_authenticated/tejas-exams'
     | '/_authenticated/exam/$examId'
@@ -428,6 +440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPracticeReviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/question-bank': {
       id: '/_authenticated/question-bank'
       path: '/question-bank'
@@ -493,6 +512,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPdfImportRoute: typeof AuthenticatedPdfImportRoute
   AuthenticatedPracticeRoute: typeof AuthenticatedPracticeRoute
   AuthenticatedPracticeReviewRoute: typeof AuthenticatedPracticeReviewRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedQuestionBankRoute: typeof AuthenticatedQuestionBankRoute
   AuthenticatedTejasExamsRoute: typeof AuthenticatedTejasExamsRoute
   AuthenticatedExamExamIdRoute: typeof AuthenticatedExamExamIdRoute
@@ -515,6 +535,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPdfImportRoute: AuthenticatedPdfImportRoute,
   AuthenticatedPracticeRoute: AuthenticatedPracticeRoute,
   AuthenticatedPracticeReviewRoute: AuthenticatedPracticeReviewRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedQuestionBankRoute: AuthenticatedQuestionBankRoute,
   AuthenticatedTejasExamsRoute: AuthenticatedTejasExamsRoute,
   AuthenticatedExamExamIdRoute: AuthenticatedExamExamIdRoute,
