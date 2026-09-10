@@ -73,8 +73,8 @@ function AuthPage() {
   };
 
   const signInWithGoogle = async () => {
-    if (loading) return;
-    setLoading(true);
+    if (googleLoading) return;
+    setGoogleLoading(true);
     try {
       const { lovable } = await import("@/integrations/lovable");
       const result = await lovable.auth.signInWithOAuth("google", {
@@ -94,26 +94,24 @@ function AuthPage() {
         } else if (raw.includes("redirect")) {
           message = "Google returned to an unexpected address. Please try again from the app URL.";
         }
-        setLoading(false);
         toast.error(message);
         return;
       }
       if (result.redirected) return;
       const ready = await waitForSession();
       if (!ready) {
-        setLoading(false);
         toast.error(
           "Google signed you in, but this browser blocked the sign-in from being saved. Allow cookies and site data for this app, then try again.",
         );
         return;
       }
-      setLoading(false);
       router.navigate({ to: "/dashboard" });
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error("[auth] Google sign-in threw", e);
-      setLoading(false);
       toast.error("Unable to start Google authentication. Please try again.");
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
