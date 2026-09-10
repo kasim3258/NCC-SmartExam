@@ -143,8 +143,13 @@ function CadetsPage() {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <CardTitle className="text-base">{m.name || "Unnamed"}</CardTitle>
-                      <CardDescription>{m.email}</CardDescription>
+                      <CardTitle className="text-base">
+                        {m.display_id || m.name || "Unnamed"}
+                      </CardTitle>
+                      <CardDescription>
+                        {m.display_id ? `${m.name || "Unnamed"} · ` : ""}
+                        {m.email}
+                      </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{m.cadet_category ?? "—"}</Badge>
