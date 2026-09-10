@@ -52,7 +52,24 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) router.navigate({ to: "/dashboard" });
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
+        router.navigate({ to: "/dashboard" });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, [router]);
+
+  // The session is written through the preview broker, so it can land a moment
+  // after sign-in resolves. Wait for it before leaving the sign-in page.
+  const waitForSession = async () => {
+    for (let i = 0; i < 20; i++) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) return true;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    return false;
+  };
 
   const signInWithGoogle = async () => {
     if (loading) return;
@@ -81,10 +98,12 @@ function AuthPage() {
         return;
       }
       if (result.redirected) return;
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) {
+      const ready = await waitForSession();
+      if (!ready) {
         setLoading(false);
-        toast.error("Your account could not be loaded after Google sign-in.");
+        toast.error(
+          "Google signed you in, but this browser blocked the sign-in from being saved. Allow cookies and site data for this app, then try again.",
+        );
         return;
       }
       setLoading(false);
