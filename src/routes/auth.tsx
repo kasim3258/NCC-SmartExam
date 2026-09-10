@@ -40,6 +40,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -72,8 +73,8 @@ function AuthPage() {
   };
 
   const signInWithGoogle = async () => {
-    if (loading) return;
-    setLoading(true);
+    if (googleLoading) return;
+    setGoogleLoading(true);
     try {
       const { lovable } = await import("@/integrations/lovable");
       const result = await lovable.auth.signInWithOAuth("google", {
@@ -93,26 +94,24 @@ function AuthPage() {
         } else if (raw.includes("redirect")) {
           message = "Google returned to an unexpected address. Please try again from the app URL.";
         }
-        setLoading(false);
         toast.error(message);
         return;
       }
       if (result.redirected) return;
       const ready = await waitForSession();
       if (!ready) {
-        setLoading(false);
         toast.error(
           "Google signed you in, but this browser blocked the sign-in from being saved. Allow cookies and site data for this app, then try again.",
         );
         return;
       }
-      setLoading(false);
       router.navigate({ to: "/dashboard" });
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error("[auth] Google sign-in threw", e);
-      setLoading(false);
       toast.error("Unable to start Google authentication. Please try again.");
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -147,6 +146,7 @@ function AuthPage() {
     if (loading) return;
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) await waitForSession();
     setLoading(false);
     if (error) {
       toast.error(
@@ -234,7 +234,7 @@ function AuthPage() {
               type="button"
               variant="outline"
               className="w-full"
-              disabled={loading}
+              disabled={googleLoading}
               onClick={signInWithGoogle}
             >
               <Mail className="mr-2 h-4 w-4" /> Continue with Google
