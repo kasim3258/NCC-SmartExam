@@ -98,7 +98,7 @@ function Dashboard() {
           <h1 className="text-2xl font-semibold tracking-tight">
             {isMainAdmin ? "Main Admin" : "Admin"} dashboard
           </h1>
-          <p className="text-muted-foreground">Welcome back, {profile?.name || "there"}.</p>
+          <p className="text-muted-foreground">Welcome back, {profile?.display_id || profile?.name || "there"}.</p>
         </div>
         {staffStats.isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -137,7 +137,7 @@ function Dashboard() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Cadet dashboard</h1>
         <p className="text-muted-foreground">
-          {profile?.name ? `${profile.name} · ` : ""}
+          {profile?.display_id || profile?.name ? `${profile.display_id || profile.name} · ` : ""}
           {profile?.cadet_category ?? "NCC"}
         </p>
       </div>
