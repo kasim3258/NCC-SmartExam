@@ -15,6 +15,7 @@ import {
   CheckCheck,
   Globe,
   Shield,
+  UserCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,6 +34,7 @@ const cadetNav: NavItem[] = [
   { to: "/analysis", label: "My Performance", icon: BarChart3 },
   
   { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/profile", label: "My Profile", icon: UserCircle },
 ];
 
 const adminNav: NavItem[] = [
@@ -47,6 +49,7 @@ const adminNav: NavItem[] = [
   { to: "/cadets", label: "Cadets", icon: Users },
   { to: "/geo-activity", label: "Geo Activity", icon: MapPin },
   { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/profile", label: "My Profile", icon: UserCircle },
 ];
 
 const staffOnlyPrefixes = [
@@ -154,7 +157,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="border-t border-sidebar-border p-4 text-sm">
-          <p className="truncate font-medium">{profile?.name || profile?.email || "Member"}</p>
+          <p className="truncate font-medium">{profile?.display_id || profile?.name || profile?.email || "Member"}</p>
           <p className="text-xs text-sidebar-foreground/70">
             {roles.join(", ")}
           </p>

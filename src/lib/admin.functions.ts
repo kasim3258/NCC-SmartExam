@@ -52,7 +52,7 @@ export const assignExam = createServerFn({ method: "POST" })
     const ids = [...new Set(data.userIds)];
 
     const [{ data: profiles }, { data: roles }, { data: existing }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id, name, email, cadet_category").in("id", ids),
+      supabaseAdmin.from("profiles").select("id, name, email, display_id, cadet_category").in("id", ids),
       supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", ids),
       supabaseAdmin.from("exam_assignments").select("user_id").eq("exam_id", data.examId).in("user_id", ids),
     ]);
@@ -66,7 +66,7 @@ export const assignExam = createServerFn({ method: "POST" })
 
     for (const id of ids) {
       const profile = profileMap.get(id);
-      const label = profile?.name || profile?.email || "This cadet";
+      const label = profile?.display_id || profile?.name || profile?.email || "This cadet";
       if (!profile) {
         skipped.push({ name: "One selected account", reason: "no longer exists" });
         continue;
@@ -146,7 +146,7 @@ export const listExamAssignments = createServerFn({ method: "POST" })
     const [{ data: profiles }, { data: exams }] = await Promise.all([
       supabaseAdmin
         .from("profiles")
-        .select("id, name, email, cadet_category")
+        .select("id, name, email, display_id, cadet_category")
         .in("id", [...new Set(rows.map((r) => r.user_id))]),
       supabaseAdmin
         .from("exams")
@@ -192,7 +192,7 @@ export const listMembers = createServerFn({ method: "POST" })
     const [{ data: profiles }, { data: roles }] = await Promise.all([
       supabaseAdmin
         .from("profiles")
-        .select("id, name, email, cadet_category, exam_participant, exam_required, created_at")
+        .select("id, name, email, display_id, cadet_category, exam_participant, exam_required, created_at")
         .order("created_at", { ascending: false }),
       supabaseAdmin.from("user_roles").select("user_id, role"),
     ]);
