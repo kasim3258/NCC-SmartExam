@@ -98,10 +98,12 @@ function AuthPage() {
         return;
       }
       if (result.redirected) return;
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) {
+      const ready = await waitForSession();
+      if (!ready) {
         setLoading(false);
-        toast.error("Your account could not be loaded after Google sign-in.");
+        toast.error(
+          "Google signed you in, but this browser blocked the sign-in from being saved. Allow cookies and site data for this app, then try again.",
+        );
         return;
       }
       setLoading(false);
