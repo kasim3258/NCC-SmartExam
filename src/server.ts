@@ -1,7 +1,12 @@
 import "./lib/error-capture";
+import "./lib/supabase-env.server";
 
 import { consumeLastCapturedError, describeError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import {
+  hydrateSupabaseEnvFromBinding,
+  missingSupabasePublicEnv,
+} from "./lib/supabase-env.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -47,6 +52,12 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    // Some runtimes hand configuration to the request instead of process.env.
+    hydrateSupabaseEnvFromBinding(env);
+    const missing = missingSupabasePublicEnv();
+    if (missing.length > 0) {
+      console.error(`[Supabase] Missing environment variable(s): ${missing.join(", ")}`);
+    }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
