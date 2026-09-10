@@ -52,6 +52,12 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    // Some runtimes hand configuration to the request instead of process.env.
+    hydrateSupabaseEnvFromBinding(env);
+    const missing = missingSupabasePublicEnv();
+    if (missing.length > 0) {
+      console.error(`[Supabase] Missing environment variable(s): ${missing.join(", ")}`);
+    }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
