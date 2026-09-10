@@ -431,3 +431,168 @@ export const deleteNotification = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/** Staff: attendance, performance and start-location report for one exam. */
+export const examAttendanceReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { examId: string }) => z.object({ examId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: exam, error: examErr } = await supabaseAdmin
+      .from("exams")
+      .select("id, title, cadet_category, marks_per_question, duration_minutes")
+      .eq("id", data.examId)
+      .maybeSingle();
+    if (examErr) throw examErr;
+    if (!exam) throw new Error("Exam not found.");
+
+    const [{ data: assignments }, { data: attempts }, { data: locations }] = await Promise.all([
+      supabaseAdmin
+        .from("exam_assignments")
+        .select("user_id, status, deadline, mandatory")
+        .eq("exam_id", data.examId),
+      supabaseAdmin
+        .from("exam_attempts")
+        .select(
+          "id, user_id, started_at, submitted_at, status, total_questions, correct_answers, wrong_answers, unanswered, score",
+        )
+        .eq("exam_id", data.examId)
+        .order("started_at", { ascending: false }),
+      supabaseAdmin
+        .from("location_events")
+        .select("attempt_id, user_id, latitude, longitude, accuracy, address, city, state, country, created_at")
+        .eq("exam_id", data.examId)
+        .eq("event_type", "EXAM_START")
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const userIds = [
+      ...new Set([
+        ...(assignments ?? []).map((a) => a.user_id),
+        ...(attempts ?? []).map((a) => a.user_id),
+      ]),
+    ];
+    const { data: profiles } = userIds.length
+      ? await supabaseAdmin
+          .from("profiles")
+          .select("id, name, email, display_id, cadet_category")
+          .in("id", userIds)
+      : { data: [] as { id: string; name: string; email: string; display_id: string | null; cadet_category: string | null }[] };
+    const pMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+    // Latest attempt per cadet.
+    const attemptByUser = new Map<string, NonNullable<typeof attempts>[number]>();
+    for (const a of attempts ?? []) if (!attemptByUser.has(a.user_id)) attemptByUser.set(a.user_id, a);
+
+    const locByAttempt = new Map((locations ?? []).map((l) => [l.attempt_id ?? "", l]));
+    const locByUser = new Map<string, NonNullable<typeof locations>[number]>();
+    for (const l of locations ?? []) if (!locByUser.has(l.user_id)) locByUser.set(l.user_id, l);
+
+    const mpq = Number(exam.marks_per_question ?? 1);
+    const label = (id: string) => {
+      const p = pMap.get(id);
+      return p?.display_id || p?.name || p?.email || "Unknown cadet";
+    };
+
+    const attended: {
+      userId: string;
+      cadet: string;
+      email: string | null;
+      score: number;
+      totalMarks: number;
+      percentage: number;
+      correct: number;
+      wrong: number;
+      unanswered: number;
+      totalQuestions: number;
+      startedAt: string;
+      submittedAt: string | null;
+      minutesTaken: number | null;
+      status: string;
+      location: {
+        address: string | null;
+        city: string | null;
+        state: string | null;
+        country: string | null;
+        latitude: number;
+        longitude: number;
+        capturedAt: string;
+      } | null;
+    }[] = [];
+    const notAttended: { userId: string; cadet: string; email: string | null }[] = [];
+
+    const assignedIds = new Set((assignments ?? []).map((a) => a.user_id));
+    // Anyone assigned, plus anyone who attempted the exam.
+    const everyone = [...new Set([...assignedIds, ...attemptByUser.keys()])];
+
+    for (const id of everyone) {
+      const p = pMap.get(id);
+      const at = attemptByUser.get(id);
+      if (!at) {
+        notAttended.push({ userId: id, cadet: label(id), email: p?.email ?? null });
+        continue;
+      }
+      const loc = locByAttempt.get(at.id) ?? locByUser.get(id) ?? null;
+      const totalMarks = Number(at.total_questions ?? 0) * mpq;
+      const score = Number(at.score ?? 0);
+      attended.push({
+        userId: id,
+        cadet: label(id),
+        email: p?.email ?? null,
+        score,
+        totalMarks,
+        percentage: totalMarks > 0 ? Math.round((score / totalMarks) * 1000) / 10 : 0,
+        correct: at.correct_answers ?? 0,
+        wrong: at.wrong_answers ?? 0,
+        unanswered: at.unanswered ?? 0,
+        totalQuestions: at.total_questions ?? 0,
+        startedAt: at.started_at,
+        submittedAt: at.submitted_at,
+        minutesTaken: at.submitted_at
+          ? Math.max(
+              0,
+              Math.round(
+                (new Date(at.submitted_at).getTime() - new Date(at.started_at).getTime()) / 60000,
+              ),
+            )
+          : null,
+        status: at.status,
+        location: loc
+          ? {
+              address: loc.address,
+              city: loc.city,
+              state: loc.state,
+              country: loc.country,
+              latitude: Number(loc.latitude),
+              longitude: Number(loc.longitude),
+              capturedAt: loc.created_at,
+            }
+          : null,
+      });
+    }
+
+    attended.sort((a, b) => b.percentage - a.percentage);
+    notAttended.sort((a, b) => a.cadet.localeCompare(b.cadet));
+
+    const totalAssigned = everyone.length;
+    const scores = attended.map((a) => a.percentage);
+    return {
+      exam,
+      attended,
+      notAttended,
+      summary: {
+        totalAssigned,
+        totalAttended: attended.length,
+        totalNotAttended: notAttended.length,
+        attendancePercentage:
+          totalAssigned > 0 ? Math.round((attended.length / totalAssigned) * 1000) / 10 : 0,
+        averageScore: scores.length
+          ? Math.round((scores.reduce((s, v) => s + v, 0) / scores.length) * 10) / 10
+          : 0,
+        highestScore: scores.length ? Math.max(...scores) : 0,
+        lowestScore: scores.length ? Math.min(...scores) : 0,
+      },
+    };
+  });

@@ -382,6 +382,39 @@ export const logLocationEvent = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data, context }) => {
+    // Best-effort reverse geocode so admins see a readable place, never blocking.
+    let place: { address: string | null; city: string | null; state: string | null; country: string | null } = {
+      address: null,
+      city: null,
+      state: null,
+      country: null,
+    };
+    try {
+      const res = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${data.latitude}&longitude=${data.longitude}&localityLanguage=en`,
+        { signal: AbortSignal.timeout(6000) },
+      );
+      if (res.ok) {
+        const j = (await res.json()) as {
+          locality?: string;
+          city?: string;
+          principalSubdivision?: string;
+          countryName?: string;
+        };
+        const city = j.city || j.locality || null;
+        place = {
+          city,
+          state: j.principalSubdivision || null,
+          country: j.countryName || null,
+          address: [j.locality, j.city, j.principalSubdivision, j.countryName]
+            .filter((v, i, a) => v && a.indexOf(v) === i)
+            .join(", ") || null,
+        };
+      }
+    } catch {
+      // keep coordinates only
+    }
+
     const { error } = await context.supabase.from("location_events").insert({
       user_id: context.userId,
       exam_id: data.examId ?? null,
@@ -390,6 +423,7 @@ export const logLocationEvent = createServerFn({ method: "POST" })
       latitude: data.latitude,
       longitude: data.longitude,
       accuracy: data.accuracy ?? null,
+      ...place,
     });
     if (error) throw error;
     return { ok: true };

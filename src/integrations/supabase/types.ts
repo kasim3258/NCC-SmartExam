@@ -603,35 +603,47 @@ export type Database = {
       location_events: {
         Row: {
           accuracy: number | null
+          address: string | null
           attempt_id: string | null
+          city: string | null
+          country: string | null
           created_at: string
           event_type: Database["public"]["Enums"]["location_event_type"]
           exam_id: string | null
           id: string
           latitude: number | null
           longitude: number | null
+          state: string | null
           user_id: string
         }
         Insert: {
           accuracy?: number | null
+          address?: string | null
           attempt_id?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           event_type: Database["public"]["Enums"]["location_event_type"]
           exam_id?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          state?: string | null
           user_id: string
         }
         Update: {
           accuracy?: number | null
+          address?: string | null
           attempt_id?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           event_type?: Database["public"]["Enums"]["location_event_type"]
           exam_id?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          state?: string | null
           user_id?: string
         }
         Relationships: [

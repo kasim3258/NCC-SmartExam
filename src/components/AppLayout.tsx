@@ -46,6 +46,7 @@ const adminNav: NavItem[] = [
   { to: "/ai-review", label: "Question Review", icon: CheckCheck },
   { to: "/content-sources", label: "Content Sources", icon: Globe },
   { to: "/practice-review", label: "Practice Bank", icon: Shield },
+  { to: "/attendance", label: "Attendance & Results", icon: CheckCheck },
   { to: "/cadets", label: "Cadets", icon: Users },
   { to: "/geo-activity", label: "Geo Activity", icon: MapPin },
   { to: "/notifications", label: "Notifications", icon: Bell },
@@ -53,6 +54,7 @@ const adminNav: NavItem[] = [
 ];
 
 const staffOnlyPrefixes = [
+  "/attendance",
   "/exams",
   "/question-bank",
   "/pdf-import",
