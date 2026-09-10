@@ -54,6 +54,7 @@ const adminNav: NavItem[] = [
 ];
 
 const staffOnlyPrefixes = [
+  "/attendance",
   "/exams",
   "/question-bank",
   "/pdf-import",
