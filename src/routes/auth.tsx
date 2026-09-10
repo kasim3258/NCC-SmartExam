@@ -146,6 +146,7 @@ function AuthPage() {
     if (loading) return;
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) await waitForSession();
     setLoading(false);
     if (error) {
       toast.error(
