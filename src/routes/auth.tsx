@@ -233,7 +233,7 @@ function AuthPage() {
               type="button"
               variant="outline"
               className="w-full"
-              disabled={loading}
+              disabled={googleLoading}
               onClick={signInWithGoogle}
             >
               <Mail className="mr-2 h-4 w-4" /> Continue with Google
