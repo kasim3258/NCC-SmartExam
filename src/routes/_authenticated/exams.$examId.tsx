@@ -543,7 +543,7 @@ function ManageExam() {
                     className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
                   >
                     <div>
-                      <p className="font-medium">{a.cadet?.name || a.cadet?.email || a.user_id}</p>
+                      <p className="font-medium">{a.cadet?.display_id || a.cadet?.name || a.cadet?.email || a.user_id}</p>
                       <p className="text-xs text-muted-foreground">
                         {a.cadet?.cadet_category ?? "No category"} ·{" "}
                         {a.deadline
@@ -556,7 +556,7 @@ function ManageExam() {
                       {a.mandatory && <Badge variant="destructive">Mandatory</Badge>}
                       <Badge variant="secondary">{a.status}</Badge>
                       <DeleteButton
-                        label={`this assignment for ${a.cadet?.name || a.cadet?.email || "this cadet"}`}
+                        label={`this assignment for ${a.cadet?.display_id || a.cadet?.name || a.cadet?.email || "this cadet"}`}
                         onConfirm={() => removeAssignment.mutate(a.id)}
                       />
                     </div>

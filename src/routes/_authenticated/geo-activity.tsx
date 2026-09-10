@@ -58,14 +58,14 @@ function GeoActivity() {
     queryKey: ["members-lite"],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id, name, email");
+      const { data, error } = await supabase.from("profiles").select("id, name, email, display_id");
       if (error) throw error;
       return data;
     },
   });
 
   const nameFor = useMemo(() => {
-    const map = new Map((people.data ?? []).map((p) => [p.id, p.name || p.email]));
+    const map = new Map((people.data ?? []).map((p) => [p.id, p.display_id || p.name || p.email]));
     return (id: string) => map.get(id) ?? "Unknown member";
   }, [people.data]);
 

@@ -16,6 +16,7 @@ export type Profile = {
   id: string;
   name: string;
   email: string;
+  display_id: string | null;
   cadet_category: "NCC B" | "NCC C" | null;
   exam_participant: boolean;
   exam_required: boolean;

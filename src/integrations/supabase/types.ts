@@ -918,6 +918,7 @@ export type Database = {
         Row: {
           cadet_category: Database["public"]["Enums"]["cadet_category"] | null
           created_at: string
+          display_id: string | null
           email: string
           exam_participant: boolean
           exam_required: boolean
@@ -928,6 +929,7 @@ export type Database = {
         Insert: {
           cadet_category?: Database["public"]["Enums"]["cadet_category"] | null
           created_at?: string
+          display_id?: string | null
           email: string
           exam_participant?: boolean
           exam_required?: boolean
@@ -938,6 +940,7 @@ export type Database = {
         Update: {
           cadet_category?: Database["public"]["Enums"]["cadet_category"] | null
           created_at?: string
+          display_id?: string | null
           email?: string
           exam_participant?: boolean
           exam_required?: boolean
