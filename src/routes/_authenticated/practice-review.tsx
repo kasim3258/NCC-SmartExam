@@ -111,13 +111,24 @@ function PracticeReview() {
   });
 
   const bulk = useMutation({
-    mutationFn: (action: "APPROVE" | "REJECT") =>
+    mutationFn: (action: "APPROVE" | "REJECT" | "ARCHIVE") =>
       bulkReviewPracticeQuestions({ data: { questionIds: [...selected], action } }),
-    onSuccess: (r) => {
+    onSuccess: (r, action) => {
       toast.success(
-        `${r.updated} question(s) updated.` +
-          (r.skipped ? ` ${r.skipped} skipped — no correct answer set yet.` : ""),
+        action === "APPROVE"
+          ? `Questions approved successfully. (${r.updated})` +
+              (r.skipped ? ` ${r.skipped} skipped — no correct answer set yet.` : "")
+          : `${r.updated} question(s) updated.`,
       );
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const bulkRemove = useMutation({
+    mutationFn: () => bulkDeletePracticeQuestions({ data: { questionIds: [...selected] } }),
+    onSuccess: (r) => {
+      toast.success(`${r.deleted} question(s) deleted.`);
       refresh();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -140,7 +151,25 @@ function PracticeReview() {
       return next;
     });
 
+  const rows: any[] = questions ?? [];
+  const { display, translating } = useEnglishQuestions(rows);
+  const visibleIds = rows.map((q: any) => q.id);
+  const selectedVisible = visibleIds.filter((id) => selected.has(id)).length;
+  const allSelected = visibleIds.length > 0 && selectedVisible === visibleIds.length;
+  const someSelected = selectedVisible > 0 && !allSelected;
+
+  const toggleAll = (checked: boolean) =>
+    setSelected((s) => {
+      const next = new Set(s);
+      for (const id of visibleIds) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+
   if (!isAdmin) return <p className="text-muted-foreground">You do not have access to this page.</p>;
+
 
   return (
     <div className="space-y-6">
