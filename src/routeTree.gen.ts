@@ -29,6 +29,7 @@ import { Route as AuthenticatedPracticeReviewRouteImport } from './routes/_authe
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedQuestionBankRouteImport } from './routes/_authenticated/question-bank'
 import { Route as AuthenticatedTejasExamsRouteImport } from './routes/_authenticated/tejas-exams'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
 import { Route as AuthenticatedExamsIndexRouteImport } from './routes/_authenticated/exams.index'
 import { Route as AuthenticatedExamsExamIdRouteImport } from './routes/_authenticated/exams.$examId'
@@ -140,6 +141,11 @@ const AuthenticatedTejasExamsRoute = AuthenticatedTejasExamsRouteImport.update({
   path: '/tejas-exams',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthenticatedExamExamIdRoute = AuthenticatedExamExamIdRouteImport.update({
   id: '/exam/$examId',
   path: '/exam/$examId',
@@ -171,7 +177,7 @@ const AuthenticatedResultsAttemptIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/tejas-exams': typeof AuthenticatedTejasExamsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
   '/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
@@ -197,7 +204,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/ai-review': typeof AuthenticatedAiReviewRoute
   '/analysis': typeof AuthenticatedAnalysisRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/question-bank': typeof AuthenticatedQuestionBankRoute
   '/tejas-exams': typeof AuthenticatedTejasExamsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exams/$examId': typeof AuthenticatedExamsExamIdRoute
   '/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
@@ -225,7 +233,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/ai-review': typeof AuthenticatedAiReviewRoute
   '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/question-bank': typeof AuthenticatedQuestionBankRoute
   '/_authenticated/tejas-exams': typeof AuthenticatedTejasExamsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/_authenticated/exams/$examId': typeof AuthenticatedExamsExamIdRoute
   '/_authenticated/results/$attemptId': typeof AuthenticatedResultsAttemptIdRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/question-bank'
     | '/tejas-exams'
+    | '/auth/callback'
     | '/exam/$examId'
     | '/exams/$examId'
     | '/results/$attemptId'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/question-bank'
     | '/tejas-exams'
+    | '/auth/callback'
     | '/exam/$examId'
     | '/exams/$examId'
     | '/results/$attemptId'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/question-bank'
     | '/_authenticated/tejas-exams'
+    | '/auth/callback'
     | '/_authenticated/exam/$examId'
     | '/_authenticated/exams/$examId'
     | '/_authenticated/results/$attemptId'
@@ -334,7 +346,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
@@ -480,6 +492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTejasExamsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_authenticated/exam/$examId': {
       id: '/_authenticated/exam/$examId'
       path: '/exam/$examId'
@@ -569,10 +588,20 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
