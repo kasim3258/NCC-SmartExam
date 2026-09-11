@@ -762,9 +762,12 @@ export const reviewPracticeQuestion = createServerFn({ method: "POST" })
 
 export const bulkReviewPracticeQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { questionIds: string[]; action: "APPROVE" | "REJECT" }) =>
+  .inputValidator((d: { questionIds: string[]; action: "APPROVE" | "REJECT" | "ARCHIVE" }) =>
     z
-      .object({ questionIds: z.array(z.string().uuid()).min(1), action: z.enum(["APPROVE", "REJECT"]) })
+      .object({
+        questionIds: z.array(z.string().uuid()).min(1),
+        action: z.enum(["APPROVE", "REJECT", "ARCHIVE"]),
+      })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -784,10 +787,13 @@ export const bulkReviewPracticeQuestions = createServerFn({ method: "POST" })
     }
     if (ids.length === 0) return { updated: 0, skipped };
 
+    const status =
+      data.action === "APPROVE" ? "APPROVED" : data.action === "REJECT" ? "REJECTED" : "ARCHIVED";
+
     const { error } = await supabaseAdmin
       .from("practice_questions")
       .update({
-        status: data.action === "APPROVE" ? "APPROVED" : "REJECTED",
+        status,
         needs_review: false,
         reviewed_by: context.userId,
         reviewed_at: new Date().toISOString(),
@@ -800,6 +806,26 @@ export const bulkReviewPracticeQuestions = createServerFn({ method: "POST" })
     });
     return { updated: ids.length, skipped };
   });
+
+export const bulkDeletePracticeQuestions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { questionIds: string[] }) =>
+    z.object({ questionIds: z.array(z.string().uuid()).min(1) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMainAdmin(context as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("practice_questions")
+      .delete()
+      .in("id", data.questionIds);
+    if (error) throw new Error(error.message);
+    await audit(supabaseAdmin, context.userId, "BULK_DELETE", "practice_questions", null, null, {
+      count: data.questionIds.length,
+    });
+    return { deleted: data.questionIds.length };
+  });
+
 
 export const deletePracticeQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

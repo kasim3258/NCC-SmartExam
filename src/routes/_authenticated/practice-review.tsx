@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ExternalLink, Repeat } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useEnglishQuestions } from "@/hooks/useEnglishQuestions";
 import {
+  bulkDeletePracticeQuestions,
   bulkReviewPracticeQuestions,
   deletePracticeQuestion,
   getContentDashboard,
@@ -19,12 +21,24 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 
 export const Route = createFileRoute("/_authenticated/practice-review")({
   head: () => ({
@@ -97,13 +111,24 @@ function PracticeReview() {
   });
 
   const bulk = useMutation({
-    mutationFn: (action: "APPROVE" | "REJECT") =>
+    mutationFn: (action: "APPROVE" | "REJECT" | "ARCHIVE") =>
       bulkReviewPracticeQuestions({ data: { questionIds: [...selected], action } }),
-    onSuccess: (r) => {
+    onSuccess: (r, action) => {
       toast.success(
-        `${r.updated} question(s) updated.` +
-          (r.skipped ? ` ${r.skipped} skipped — no correct answer set yet.` : ""),
+        action === "APPROVE"
+          ? `Questions approved successfully. (${r.updated})` +
+              (r.skipped ? ` ${r.skipped} skipped — no correct answer set yet.` : "")
+          : `${r.updated} question(s) updated.`,
       );
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const bulkRemove = useMutation({
+    mutationFn: () => bulkDeletePracticeQuestions({ data: { questionIds: [...selected] } }),
+    onSuccess: (r) => {
+      toast.success(`${r.deleted} question(s) deleted.`);
       refresh();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -126,7 +151,25 @@ function PracticeReview() {
       return next;
     });
 
+  const rows: any[] = questions ?? [];
+  const { display, translating } = useEnglishQuestions(rows);
+  const visibleIds = rows.map((q: any) => q.id);
+  const selectedVisible = visibleIds.filter((id) => selected.has(id)).length;
+  const allSelected = visibleIds.length > 0 && selectedVisible === visibleIds.length;
+  const someSelected = selectedVisible > 0 && !allSelected;
+
+  const toggleAll = (checked: boolean) =>
+    setSelected((s) => {
+      const next = new Set(s);
+      for (const id of visibleIds) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+
   if (!isAdmin) return <p className="text-muted-foreground">You do not have access to this page.</p>;
+
 
   return (
     <div className="space-y-6">
@@ -188,29 +231,73 @@ function PracticeReview() {
           <Checkbox checked={onlyRepeated} onCheckedChange={(v) => setOnlyRepeated(Boolean(v))} />
           Repeated questions only
         </label>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <Checkbox
+            checked={allSelected ? true : someSelected ? "indeterminate" : false}
+            onCheckedChange={(v) => toggleAll(Boolean(v))}
+            disabled={visibleIds.length === 0}
+            aria-label="Select All"
+          />
+          Select All
+        </label>
         <span className="text-sm text-muted-foreground">
-          {questions?.length ?? 0} shown · {selected.size} selected
+          {rows.length} shown · {selectedVisible} selected
         </span>
+        {translating && (
+          <span className="text-sm text-muted-foreground">Translating to English…</span>
+        )}
         {isMainAdmin && selected.size > 0 && (
           <>
-            <Button size="sm" disabled={bulk.isPending} onClick={() => bulk.mutate("APPROVE")}>
-              Approve selected
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={bulk.isPending}
-              onClick={() => bulk.mutate("REJECT")}
-            >
-              Reject selected
-            </Button>
+            <ConfirmAction
+              trigger={
+                <Button size="sm" disabled={bulk.isPending}>
+                  Approve Selected
+                </Button>
+              }
+              title="Are you sure you want to approve the selected questions?"
+              confirmLabel="Approve"
+              onConfirm={() => bulk.mutate("APPROVE")}
+            />
+            <ConfirmAction
+              trigger={
+                <Button size="sm" variant="outline" disabled={bulk.isPending}>
+                  Reject Selected
+                </Button>
+              }
+              title="Reject the selected questions?"
+              confirmLabel="Reject"
+              onConfirm={() => bulk.mutate("REJECT")}
+            />
+            <ConfirmAction
+              trigger={
+                <Button size="sm" variant="outline" disabled={bulk.isPending}>
+                  Archive Selected
+                </Button>
+              }
+              title="Archive the selected questions?"
+              confirmLabel="Archive"
+              onConfirm={() => bulk.mutate("ARCHIVE")}
+            />
+            <ConfirmAction
+              trigger={
+                <Button size="sm" variant="destructive" disabled={bulkRemove.isPending}>
+                  Delete Selected
+                </Button>
+              }
+              title="Delete the selected questions?"
+              description="This permanently removes them and cannot be undone."
+              confirmLabel="Delete"
+              destructive
+              onConfirm={() => bulkRemove.mutate()}
+            />
           </>
         )}
       </div>
 
+
       {isLoading ? (
         <Skeleton className="h-64" />
-      ) : (questions ?? []).length === 0 ? (
+      ) : rows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
             No questions match these filters.
@@ -218,8 +305,11 @@ function PracticeReview() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {(questions ?? []).map((q: any) => (
+          {rows.map((row: any) => {
+            const q = display(row);
+            return (
             <Card key={q.id}>
+
               <CardContent className="space-y-3 py-4">
                 <div className="flex items-start gap-3">
                   <Checkbox
@@ -369,9 +459,52 @@ function PracticeReview() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
+
+function ConfirmAction({
+  trigger,
+  title,
+  description,
+  confirmLabel,
+  destructive,
+  onConfirm,
+}: {
+  trigger: React.ReactNode;
+  title: string;
+  description?: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {description ?? "This applies only to the questions you have selected."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className={
+              destructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""
+            }
+            onClick={onConfirm}
+          >
+            {confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+

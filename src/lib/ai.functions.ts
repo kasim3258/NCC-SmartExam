@@ -658,3 +658,57 @@ export const answerPracticeQuestion = createServerFn({ method: "POST" })
 
     return { isCorrect, correctAnswer: q.correct_answer as string, explanation: q.explanation as string | null };
   });
+
+/** Display-only translation of Hindi question text into English. Never writes to the database. */
+export const translateQuestionsToEnglish = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      items: { id: string; question_text: string; option_a: string; option_b: string; option_c: string; option_d: string }[];
+    }) =>
+      z
+        .object({
+          items: z
+            .array(
+              z.object({
+                id: z.string(),
+                question_text: z.string(),
+                option_a: z.string(),
+                option_b: z.string(),
+                option_c: z.string(),
+                option_d: z.string(),
+              }),
+            )
+            .min(1)
+            .max(25),
+        })
+        .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStaff(context as { supabase: any; userId: string });
+
+    const system = [
+      "You translate NCC exam questions from Hindi to clear, accurate English.",
+      "Preserve the exact meaning. Keep abbreviations, acronyms, ranks, unit names and English text unchanged.",
+      "If a field is already English, return it exactly as given.",
+      "Return ONLY a JSON array, no prose, no markdown fences.",
+      'Each element: {"id":"...","question_text":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"..."}',
+    ].join("\n");
+
+    let raw: string;
+    try {
+      raw = await callAI(system, JSON.stringify(data.items));
+    } catch {
+      return { translations: [] as typeof data.items };
+    }
+
+    const start = raw.indexOf("[");
+    const end = raw.lastIndexOf("]");
+    if (start === -1 || end === -1) return { translations: [] as typeof data.items };
+    try {
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as typeof data.items;
+      return { translations: Array.isArray(parsed) ? parsed : [] };
+    } catch {
+      return { translations: [] as typeof data.items };
+    }
+  });
