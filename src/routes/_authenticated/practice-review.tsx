@@ -297,7 +297,7 @@ function PracticeReview() {
 
       {isLoading ? (
         <Skeleton className="h-64" />
-      ) : (questions ?? []).length === 0 ? (
+      ) : rows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
             No questions match these filters.
@@ -305,8 +305,11 @@ function PracticeReview() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {(questions ?? []).map((q: any) => (
+          {rows.map((row: any) => {
+            const q = display(row);
+            return (
             <Card key={q.id}>
+
               <CardContent className="space-y-3 py-4">
                 <div className="flex items-start gap-3">
                   <Checkbox
