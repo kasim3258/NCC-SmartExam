@@ -231,25 +231,69 @@ function PracticeReview() {
           <Checkbox checked={onlyRepeated} onCheckedChange={(v) => setOnlyRepeated(Boolean(v))} />
           Repeated questions only
         </label>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <Checkbox
+            checked={allSelected ? true : someSelected ? "indeterminate" : false}
+            onCheckedChange={(v) => toggleAll(Boolean(v))}
+            disabled={visibleIds.length === 0}
+            aria-label="Select All"
+          />
+          Select All
+        </label>
         <span className="text-sm text-muted-foreground">
-          {questions?.length ?? 0} shown · {selected.size} selected
+          {rows.length} shown · {selectedVisible} selected
         </span>
+        {translating && (
+          <span className="text-sm text-muted-foreground">Translating to English…</span>
+        )}
         {isMainAdmin && selected.size > 0 && (
           <>
-            <Button size="sm" disabled={bulk.isPending} onClick={() => bulk.mutate("APPROVE")}>
-              Approve selected
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={bulk.isPending}
-              onClick={() => bulk.mutate("REJECT")}
-            >
-              Reject selected
-            </Button>
+            <ConfirmAction
+              trigger={
+                <Button size="sm" disabled={bulk.isPending}>
+                  Approve Selected
+                </Button>
+              }
+              title="Are you sure you want to approve the selected questions?"
+              confirmLabel="Approve"
+              onConfirm={() => bulk.mutate("APPROVE")}
+            />
+            <ConfirmAction
+              trigger={
+                <Button size="sm" variant="outline" disabled={bulk.isPending}>
+                  Reject Selected
+                </Button>
+              }
+              title="Reject the selected questions?"
+              confirmLabel="Reject"
+              onConfirm={() => bulk.mutate("REJECT")}
+            />
+            <ConfirmAction
+              trigger={
+                <Button size="sm" variant="outline" disabled={bulk.isPending}>
+                  Archive Selected
+                </Button>
+              }
+              title="Archive the selected questions?"
+              confirmLabel="Archive"
+              onConfirm={() => bulk.mutate("ARCHIVE")}
+            />
+            <ConfirmAction
+              trigger={
+                <Button size="sm" variant="destructive" disabled={bulkRemove.isPending}>
+                  Delete Selected
+                </Button>
+              }
+              title="Delete the selected questions?"
+              description="This permanently removes them and cannot be undone."
+              confirmLabel="Delete"
+              destructive
+              onConfirm={() => bulkRemove.mutate()}
+            />
           </>
         )}
       </div>
+
 
       {isLoading ? (
         <Skeleton className="h-64" />
